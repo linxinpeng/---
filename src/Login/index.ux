@@ -1,0 +1,258 @@
+<template>
+    <!-- template里只能有一个根节点 -->
+    <div class="demo-page">
+        <div class="topTitle">
+            <stack>
+                <input type="button" value="返回" onclick="backIndex"></input>
+                <text>登录</text>
+            </stack>
+        </div>
+        <div class="logoImg">
+            <image class="logo" src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/logo.png"></image>
+        </div>
+        <div class="form">
+            <div class="item">
+                <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/login/phone.png"></image>
+                <input type="number" / placeholder="请输入手机号码" onchange="getPhone" />
+            </div>
+            <div class="item">
+                <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/login/lock.png"></image>
+                <input type="number" / placeholder="请输入验证码" onchange="getVerityCode" />
+                <text class="getCode" onclick="getCode" if="{{code}}">获取验证码</text>
+                <text class="getCode" else>{{time}}s</text>
+            </div>
+        </div>
+        <div>
+            <input type="button" value="登录" class="login" onclick="login" />
+        </div>
+        <text class="agreement" onclick="agreement">
+            <span>登录即表示同意</span>
+            <span class="detail">《用户登录服务协议》</span>
+        </text>
+    </div>
+</template>
+
+<style src="./login.less" lang="less"></style>
+
+<script>
+    import router from '@system.router'
+    import fetch from '@system.fetch'
+    import prompt from '@system.prompt'
+    import storage from '@system.storage'
+
+    export default {
+        // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
+        private: {
+            title: '',
+            phone: "",
+            code: true,
+            time: 60,
+            verityCode: '',
+            href: ''
+        },
+        protected: {
+            key: '',
+        },
+        onShow() {
+            $umeng_stat.resume(this);
+        },
+        onHide() {
+            $umeng_stat.pause(this);
+        },
+        onInit() {
+            prompt.showToast({
+                message: '请先登录~'
+            })
+            storage.get({
+                key: 'login_agreement',
+                success: (data) => {
+                    this.href = data;
+                },
+                fail: function (data, code) {
+                    console.log("handling fail, code = " + code);
+                }
+            })
+        },
+        agreement() {
+            router.push({
+                uri: this.href
+            })
+        },
+        isPoneAvailable: function (phone) {
+            var myreg = /^[1][2,3,4,5,6,7,8,9][0-9]{9}$/;
+            if (!myreg.test(phone)) {
+                return false;
+            } else {
+                return true;
+            }
+        },
+        getCode() {
+            if (!this.isPoneAvailable(this.phone)) {
+                prompt.showToast({
+                    message: '请输入正确的手机号码',
+                    duration: 2000,
+                    gravity: 'center'
+                })
+            } else {
+                fetch.fetch({
+                    header: {
+                        "device-type": "quickapp",
+                        "channel": this.$app.$def.brand,
+                        "app-version": this.$app.$def.appVersion,
+                        "appid": this.$app.$def.appId
+                    },
+                    url: this.$app.$def.baseUrl + '/api/shebao/sys/send_verify_code',
+                    data: {
+                        mobile: this.phone
+                    },
+                    success: (res) => {
+                        res = JSON.parse(res.data);
+                        if (res.code == 1) {
+                            prompt.showToast({
+                                message: '短信已发送，请及时查收.',
+                                duration: 2000,
+                                gravity: 'center'
+                            })
+                            this.code = false;
+                            let that = this;
+                            let time = setInterval(function () {
+                                if (that.time == 0) {
+                                    clearInterval(time);
+                                    that.code = true;
+                                    that.time = 60;
+                                } else {
+                                    that.time--;
+                                }
+                            }, 1000)
+                        } else {
+                            prompt.showToast({
+                                message: res.msg,
+                                duration: 2000,
+                                gravity: 'center'
+                            })
+                        }
+                    },
+                    fail: function (data, code) {
+                        console.log("handling fail, code = " + code);
+                    }
+                })
+            }
+        },
+        getPhone(value) {
+            this.phone = value.value;
+        },
+        getVerityCode(value) {
+            this.verityCode = value.text;
+        },
+        login() {
+            if (!this.isPoneAvailable(this.phone)) {
+                prompt.showToast({
+                    message: '请输入正确的手机号',
+                    duration: 2000,
+                    gravity: 'center'
+                })
+            } else {
+                if (this.verityCode == '') {
+                    prompt.showToast({
+                        message: '请输入验证码',
+                        duration: 2000,
+                        gravity: 'center'
+                    })
+                } else {
+
+                    fetch.fetch({
+                        url: this.$app.$def.baseUrl + '/api/shebao/sys/check_verify_code',
+                        header: {
+                            "user-device-type": "quickapp",
+                            "channel": this.$app.$def.brand,
+                            "app-version": this.$app.$def.appVersion,
+                            "appid": this.$app.$def.appId
+                        },
+                        data: {
+                            mobile: this.phone,
+                            "verify_code": this.verityCode,
+                            "check_type": 'login',
+                            "device_type": 'quickapp',
+                        },
+                        success: (res) => {
+                            res = JSON.parse(res.data);
+                            if (res.code == 1) {
+                                //存手机号
+                                storage.set({
+                                    key: 'phone',
+                                    value: this.phone,
+                                    success: function (data) {
+
+                                    },
+                                    fail: function (data, code) {
+                                        console.log("handling fail, code = " + code);
+                                    }
+                                })
+                                //存TOKEN
+                                storage.set({
+                                    key: 'token',
+                                    value: res.data.token,
+                                    success: function (data) {
+
+                                    },
+                                    fail: function (data, code) {
+                                        console.log("handling fail, code = " + code);
+                                    }
+                                })
+                                //user_id
+                                storage.set({
+                                    key: 'user_id',
+                                    value: res.data.user_id,
+                                    success: function (data) {
+
+                                    },
+                                    fail: function (data, code) {
+                                        console.log("handling fail, code = " + code);
+                                    }
+                                })
+                                //personIcon
+                                storage.set({
+                                    key: 'personIcon',
+                                    value: res.data.avatar,
+                                    success: function (data) {
+
+                                    },
+                                    fail: function (data, code) {
+                                        console.log("handling fail, code = " + code);
+                                    }
+                                })
+                                console.log(this.key);
+                                if (this.key != '') {
+                                    router.push({
+                                        uri: '/' + this.key
+                                    })
+                                } else {
+                                    router.push({
+                                        uri: '/Index'
+                                    })
+                                }
+                            } else {
+                                prompt.showToast({
+                                    message: res.msg,
+                                    duration: 2000,
+                                    gravity: 'center'
+                                })
+                            }
+                        },
+                        fail: function (err, code) {
+                            prompt.showToast({
+                                message: '登陆接口出错',
+                                duration: 2000,
+                                gravity: 'center'
+                            })
+                            console.log("handling fail, code = " + err);
+                        }
+                    })
+                }
+            }
+        },
+        backIndex() {
+            router.back();
+        }
+    }
+</script>

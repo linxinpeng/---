@@ -1,0 +1,155 @@
+<template>
+    <!-- template里只能有一个根节点 -->
+    <div class="demo-page">
+        <list>
+            <!-- onscrollbottom="loadMoreData" -->
+            <list-item type="funBox">
+                <div class="topTitle">
+                    <stack>
+                        <input type="button" value="返回" onclick="backIndex"></input>
+                        <text>{{txt}}</text>
+                    </stack>
+                </div>
+            </list-item>
+            <list-item type="box" class="top">
+                <text class="totalMonth">已累计缴纳</text>
+                <text class="month">{{totalMonth}}</text>
+                <text class="last">个月</text>
+            </list-item>
+            <list-item type="box3" class="title">
+                <text>缴纳时间</text>
+                <text>缴纳基数</text>
+                <text>公司缴纳</text>
+                <text>个人缴纳</text>
+            </list-item>
+            <block for="arr">
+                <list-item type="box1" class="box">
+                    <text class="item first">{{$item.month}}</text>
+                    <text class="item ">{{fixTo2($item.base_number)}}</text>
+                    <text class="item ">{{fixTo2($item.monthly_company_income)}}</text>
+                    <text class="item ">{{fixTo2($item.monthly_personal_income)}}</text>
+                </list-item>
+            </block>
+            <list-item type="loadMore" class="load-more" onappear="loadMoreData">
+                <progress type="circular" show="{{hasMore}}"></progress>
+                <text>{{hasMore?'加载更多':'已无更多'}}</text>
+            </list-item>
+        </list>
+    </div>
+</template>
+<style src="./detail.less" lang="less"></style>
+<script>
+    import router from '@system.router'
+    import fetch from '@system.fetch'
+    import prompt from '@system.prompt'
+    import storage from '@system.storage'
+    export default {
+        // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
+        private: {
+            hasMore: true,
+            totalMonth: '',
+            page: 1,
+            arr: [],
+            token: '',
+            typeName: '',
+            txt: ""
+        },
+        protected: {
+            type: '',
+            taskId: '',
+        },
+        fixTo2(value) {
+            return (parseFloat(value) / 100).toFixed(2);
+        },
+        onShow() {
+            $umeng_stat.resume(this);
+        },
+        onHide() {
+            $umeng_stat.pause(this);
+        },
+        onInit() {
+
+            if (this.type == 1) {
+                this.txt = "基本医疗保险"; this.typeName = "medical_insurance";
+            }
+            if (this.type == 2) {
+                this.txt = "基本养老保险"; this.typeName = "endowment_insurance";
+            }
+            if (this.type == 3) {
+                this.txt = "基本生育保险"; this.typeName = "maternity_insurance";
+            }
+            if (this.type == 4) {
+                this.txt = "基本失业保险"; this.typeName = "unemployment_insurance";
+            }
+            if (this.type == 5) {
+                this.txt = "基本工伤保险"; this.typeName = "accident_insurance";
+            }
+            storage.get({
+                key: 'token',
+                success: (data) => {
+                    this.token = data;
+                    fetch.fetch({
+                        url: this.$app.$def.baseUrl + '/api/shebao/data/insurance',
+                        header: {
+                            'User-Token': data,
+                            'User-Device-Type': 'quickapp',
+                            'app-version': '1',
+                            "device_type": "quickapp",
+                            "channel": this.$app.$def.brand,
+                            "app_version": this.$app.$def.appVersion,
+                            "appid": this.$app.$def.appId
+                        },
+                        data: {
+                            task_id: this.taskId,
+                            category: this.typeName,
+                            page: this.page
+                        },
+                        success: (data1) => {
+                            let res = JSON.parse(data1.data);
+                            this.totalMonth = res.data.total_month;
+                            this.arr.push(...res.data.list);
+                        },
+                        fail: function (data2, code) {
+                            console.log("handling fail, code = " + code);
+                        }
+                    })
+                }
+            });
+        },
+        loadMoreData() {
+            if (this.hasMore) {
+                fetch.fetch({
+                    url: this.$app.$def.baseUrl + '/api/shebao/data/insurance',
+                    header: {
+                        'User-Token': this.token,
+                        'User-Device-Type': 'quickapp',
+                        'app-version': '1',
+                        "device_type": "quickapp",
+                        "channel": this.$app.$def.brand,
+                        "app_version": this.$app.$def.appVersion,
+                        "appid": this.$app.$def.appId
+                    },
+                    data: {
+                        task_id: this.taskId,
+                        category: this.typeName,
+                        page: ++this.page
+                    },
+                    success: (data1) => {
+                        let res = JSON.parse(data1.data);
+                        if (res.data.list) {
+                            this.arr.push(...res.data.list);
+                        } else {
+                            this.hasMore = false;
+                        }
+                    },
+                    fail: function (data2, code) {
+                        console.log("handling fail, code = " + code);
+                    }
+                })
+            }
+        },
+        backIndex() {
+            router.back();
+        }
+    }
+</script>

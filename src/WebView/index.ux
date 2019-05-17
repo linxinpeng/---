@@ -1,0 +1,65 @@
+<template>
+    <div class="main">
+        <div class="topBox">
+            <stack>
+                <text onclick="backIndex">返回</text>
+                <text class="title">{{title}}</text>
+            </stack>
+        </div>
+        <div class="tab">
+            <block for="tabs">
+                <text class="item {{$idx==tabIndex?'active':''}}" onclick="changeTab($item,$idx)">{{$item.category_name}}</text>
+            </block>
+        </div>
+        <web src="{{url}}"></web>
+    </div>
+</template>
+<style src="./index.less" lang="less"></style>
+<script>
+   import router from '@system.router';
+   import fetch from '@system.fetch';
+   import prompt from '@system.prompt';
+   export default{
+       protected: {
+           title:'',
+           tabs:[],
+           url:'',
+           tabIndex: 0
+       },
+       onInit: function () {
+              const that = this;
+               prompt.showToast({
+                   message: '若当前城市无服务，默认显示北京',
+                   duration: 2000,
+                   gravity: 'center'
+               })
+               fetch.fetch({
+                   url: this.$app.$def.baseUrl + '/api/shebao/categories/article_single',
+                   data:{
+                       "en":'shebaozhengcejiedu',
+                       "city_id": this.$app.$def.city_id,
+                   },
+                   responseType: 'text',
+                   success: function (resp) {
+                       console.log('1111111111111111111',resp)
+                       resp = JSON.parse(resp.data);
+                       if(resp.code == 1){
+                           that.tabs = resp.data;
+                           that.title = resp.data[0].post_title;
+                           that.url = resp.data[0].article.href;
+                       }
+                   },
+                   fail: function (data, code) {
+                       console.log("handling fail, code = " + code);
+                   }
+               })
+       },
+       backIndex(){
+           router.back();
+       },
+        changeTab(item, index) {
+            this.url = item.article.href;
+            this.tabIndex = index;
+        }
+   }
+</script>

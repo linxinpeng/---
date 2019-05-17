@@ -1,0 +1,26 @@
+.main {
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+.topTitle {
+  height: 80px;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  background-color: #fff;
+}
+.topTitle input {
+  border: 0;
+  background-color: transparent;
+  color: #414141;
+  margin: 0 50px 0 20px;
+  font-size: 30px;
+}
+.topTitle text {
+  color: #414141;
+  text-align: left;
+  font-size: 40px;
+  width: 100%;
+  text-align: center;
+}

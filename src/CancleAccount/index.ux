@@ -1,0 +1,223 @@
+<template>
+  <div class="main">
+    <div class="m-head">
+      <image src="http://test.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/cancleaccount/1.png"></image>
+      <text class="title">申请永久注销账号</text>
+    </div>
+    <div style="background-color: #f2f2f2;height: 20px;"></div>
+    <div class="m-content">
+      <text class="title">重要提醒：</text>
+      <text class="desc-1">注销账号是不可恢复的操作，操作之前，请确认相关的所有服务均已妥善处理。</text>
+      <text class="desc-2">请谨记：账号注销后，与该账号相关的，该单项服务项下的全部服务资料和数据将依照单项服务的服务协议约定删除或处理。</text>
+    </div>
+    <div class="m-bottom">
+      <text onclick="toPolicy">点击下方的【申请注销】按钮，即表示你已阅读并同意<span style="color: #00008b;">《隐私政策》</span>下的全部内容</text>
+    </div>
+    <div class="m-btn">
+      <div class="btn" onclick="showDig">
+        <text>申请注销</text>
+      </div>
+    </div>
+    <div class="popup" if="isShow" onclick="closeDig">
+      <div class="mask">
+        <div class="header">
+          <text>请输入短信验证码</text>
+        </div>
+        <div class="content"> 
+          <text class="c-phone">发送至手机号{{phone}}</text>
+          <div class="c-input">
+            <input type="text"  placeholder="短信验证码"  onchange="getVerityCode" />
+            <div class="i-btn">
+              <text if="{{code}}" onclick="sendCode">获取验证码</text>
+              <text else>{{time}}s</text>
+            </div>
+          </div>
+        </div>
+        <div class="c-btn" onclick="loginOut">
+          <text>确认注销</text>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style lang="less" src="./CancleAccount.less"></style>
+<script>
+import storage from '@system.storage'
+import fetch from '@system.fetch'
+import prompt from '@system.prompt'
+import router from '@system.router'
+  module.exports = {
+    private: {
+        VCode:'',
+        phone:'158****4845',
+        code: true,
+        time: 60,
+        token:'',
+        isShow: false
+    },
+    onInit() {
+      let that = this;
+      // this.$page.setTitleBar({ text: '账号注销' });
+      storage.get({
+        key:'phone',
+        success:function(data) {
+          that.phone = data; 
+        },
+        fail:function(data,code){
+          console.log(data,code)
+        }
+      })
+      storage.get({
+        key:'token',
+        success: (data) => {
+            if (data != '') {
+                this.token = data;
+            }
+          },
+          fail: function (data, code) {
+              console.log("handling fail, code");
+          }
+      })
+    },
+    getVerityCode(value){
+      this.VCode = value.text;
+    },
+    toPolicy(){
+      router.push({
+        uri:'http://shebao.dai58.cn/home/shebaoyidiantong/policy.html'
+      })
+    },
+    showDig(){
+      this.isShow= true;
+    },
+    closeDig(){
+      this.isShow = false;
+    },
+    sendCode(){
+       fetch.fetch({
+          header: {
+              "device-type": "quickapp",
+              "channel": this.$app.$def.brand,
+              "app-version": this.$app.$def.appVersion,
+              "appid": 4
+          },
+          url: this.$app.$def.baseUrl + '/api/shebao/sys/send_verify_code',
+          data: {
+              mobile: this.phone
+          },
+          success: (res) => {
+              res = JSON.parse(res.data);
+              if (res.code == 1) {
+                  prompt.showToast({
+                      message: '短信已发送，请及时查收.',
+                      duration: 2000,
+                      gravity: 'center'
+                  })
+                  this.code = false;
+                  let that = this;
+                  let time = setInterval(function () {
+                      if (that.time == 0) {
+                          clearInterval(time);
+                          that.code = true;
+                          that.time = 60;
+                      } else {
+                          that.time--;
+                      }
+                  }, 1000)
+              } else {
+                  prompt.showToast({
+                      message: res.msg,
+                      duration: 2000,
+                      gravity: 'center'
+                  })
+              }
+          },
+          fail: function (data, code) {
+              console.log("handling fail, code = " + code);
+          }
+      })
+    },
+    loginOut(){
+      if(!this.VCode){
+         prompt.showToast({
+              message: '验证码不能为空',
+              duration: 2000,
+              gravity: 'center'
+          })
+          return;
+      }
+      let that = this;
+      fetch.fetch({
+        header: {
+            "User-Device-Type": "quickapp",
+            "user-token": this.token,
+            "App-Version": this.$app.$def.appVersion,
+            "appid": 4
+          },
+        data:{
+          mobile: this.phone,
+          verify_code: this.VCode
+        },
+        url: this.$app.$def.baseUrl + '/api/shebao/user/cancelUser',
+        method: 'POST',
+        success: function (res) {
+          res = JSON.parse(res.data);
+          console.log(res,'点击了注销按钮')
+          if(res.code == 1){
+              prompt.showToast({
+                  message: '注销成功',
+                  duration: 2000,
+                  gravity: 'center'
+              })
+              that.lgOut();
+          }else{
+            prompt.showToast({
+                  message: res.msg,
+                  duration: 2000,
+                  gravity: 'center'
+              })
+          }
+        },
+        fail: function (data, code) {
+          console.log("handling fail, code = " + code);
+        }
+      })
+    },
+    lgOut() {
+            storage.set({
+                key: 'token',
+                value: '',
+                success: (data) => {
+                },
+                fail: function (data, code) {
+                    console.log(`handling fail, code = ${code}`)
+                }
+            })
+            storage.set({
+                key: 'phone',
+                value: '',
+                success: (data) => {
+
+                },
+                fail: function (data, code) {
+                    console.log(`handling fail, code = ${code}`)
+                }
+            })
+            storage.set({
+                key: 'personIcon',
+                value: '',
+                success: (data) => {
+
+                },
+                fail: function (data, code) {
+                    console.log(`handling fail, code = ${code}`)
+                }
+            })
+            this.token = "";
+            router.push({
+                uri: '/Index'
+            })
+        },
+  }
+</script>

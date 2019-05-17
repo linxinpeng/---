@@ -1,0 +1,123 @@
+.demo-page{
+    width:100%;
+    height:100%;
+    flex-direction: column;
+    .bigImg{width: 100%;height: 100%;}
+}
+.pro{
+    width:55%;
+    margin-top: 190px;
+    margin-left: 170px;
+    text{
+        width:100%;
+        text-align: center;
+        color:#fff;
+        font-size: 100px;
+    }
+    image{ 
+        width:100%;
+        animation-name:nn;
+        animation-duration:2000;
+        animation-iteration-count:infinite;
+        animation-timing-function:linear;
+    }
+}
+.form{
+    position: fixed;
+    top:100px;
+    left:0;right: 0;
+    align-self: center;
+    justify-content: center;
+    width:80%; 
+    z-index: 100;
+    padding:30px 0;
+    flex-direction: column;
+    align-items: center;
+    background-color: white;
+    image{
+        width:50px;
+        height: 50px;
+    }
+    .item{
+        width: 90%;
+        height:100px;
+        align-items: center;
+        justify-content: flex-start;
+        border:1px solid #ededed;
+        border-top-width: 0;
+        border-left-width: 0;
+        border-right-width: 0;
+        input{
+            padding-left:24px;
+            font-size:28px;
+            color:#c9c9c9;
+            flex-grow: 1;
+            height: 100%;
+            line-height: 100px;
+        }
+        .bbb{
+            padding-left: 0;
+        }
+        div{
+            padding-left:28px;
+            flex-grow: 1;
+            justify-content: space-between;
+            image{
+                height:24px;width:14px;
+            }
+            .litEye1{
+                width:36px;height:22px;
+            }
+            .litEye2{
+                width:36px;height:22px;
+            }
+        }
+    }
+    .codeImg{
+        width: 90%;
+        justify-content: center;
+        align-items: center;
+        margin-top: 10px;
+         image{
+            width:320px;
+            height: 120px;
+        }
+    }
+    .queryBtn{
+        margin-top: 20px;
+        padding:0 15px;
+    }
+}
+@keyframes nn{
+    from{
+        transform: rotate(0deg) ;
+    }
+    to{
+        transform: rotate(360deg) ;
+    }
+}
+.btn{
+    position: fixed;
+    bottom:50px;
+    width:80px;
+    height:80px;
+    left:330px;
+   image,input{
+       width: 100%;
+       height: 100%;
+   }
+   input{
+       background-color:transparent;
+   }
+}
+.box{
+    position: fixed;
+    flex-direction: column;
+    width:100%;
+    top:800px;
+    text{
+        width:100%;
+        text-align: center;
+        color:#fff;
+    }
+}

@@ -1,0 +1,332 @@
+<import name="index1" src="./../Templete/index/index"></import>
+<import name="socialsecurity" src="./../Templete/socialSecurity/index"></import>
+<import name="discovery" src="./../Templete/discovery/index"></import>
+<import name="personal" src="./../Templete/personal/index"></import>
+<template>
+    <!-- template里只能有一个根节点 -->
+    <div class="demo-page">
+        <tabs onchange="writeIndex">
+            <tab-bar class="tabbar">
+                <div class="item">
+                    <image src="{{tabArr[0].class===''?tabArr[0].img1:tabArr[0].img2}}" alt="路径出错"></image>
+                    <text class="{{tabArr[0].class}}">首页</text>
+                </div>
+                <div class="item">
+                    <image src="{{tabArr[1].class===''?tabArr[1].img1:tabArr[1].img2}}" alt="路径出错"></image>
+                    <text class="{{tabArr[1].class}}">社保</text>
+                </div>
+                <div class="item">
+                    <image src="{{tabArr[2].class===''?tabArr[2].img1:tabArr[2].img2}}" alt="路径出错"></image>
+                    <text class="{{tabArr[2].class}}">发现</text>
+                </div>
+                <div class="item">
+                    <image src="{{tabArr[3].class===''?tabArr[3].img1:tabArr[3].img2}}" alt="路径出错"></image>
+                    <text class="{{tabArr[3].class}}">我的</text>
+                </div>
+            </tab-bar>
+            <tab-content>
+                <div class="tab-content-section">
+                    <div class="topTitle" style="background-color:#ffffff;">
+                        <stack>
+                            <div class="position" onclick="selectedPosition" show="{{titleTxt == '人人社保'}}">
+                                <image src="/Common/position.png"></image>
+                                <text>{{city}}</text>
+                            </div>
+                            <text>人人社保</text>
+                        </stack>
+                    </div>
+                    <index1 id="index" prop1="{{activity1}}" prop2="{{mid_banner}}" prop3="{{hot_article}}" prop4="{{activity2}}" prop5="{{activity1Url}}"
+                        prop6="{{activity2Url}}" if="{{tabArr[0].class==='selected'}}"></index1>
+                </div>
+                <div class="tab-content-section">
+                    <div class="topTitle" style="background-color:#ffffff;">
+                        <stack>
+                            <text>社保</text>
+                        </stack>
+                    </div>
+                    <socialsecurity id="shebao" elif="{{tabArr[1].class==='selected'}}"></socialsecurity>
+                </div>
+                <div class="tab-content-section">
+                    <div class="topTitle" style="background-color:#ffffff;">
+                        <stack>
+                            <text>发现</text>
+                        </stack>
+                    </div>
+                    <discovery elif="{{tabArr[2].class==='selected'}}"></discovery>
+                </div>
+                <div class="tab-content-section">
+                    <div class="topTitle" style="background-color:#4b80fe;">
+                        <stack>
+                            <text style="color:#ffffff;">我的</text>
+                            <div class="litbox">
+                                <image onclick="cutApp" src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/personal/morepoint.png"></image>
+                            </div>
+                        </stack>
+                    </div>
+                    <personal id="personal" elif="{{tabArr[3].class==='selected'}}"></personal>
+                </div>
+            </tab-content>
+        </tabs>
+    </div>
+</template>
+
+<style lang="less" src="./index.less"></style>
+
+<script>
+    import router from '@system.router'
+    import prompt from '@system.prompt'
+    import fetch from '@system.fetch'
+    import storage from '@system.storage'
+    import geolocation from '@system.geolocation'
+    export default {
+        // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
+        private: {
+            isreFresh: false,
+            titleTxt: '人人社保',
+            tabArr: [
+                {
+                    class: 'selected',
+                    img1: '/Common/shouye1.png',
+                    img2: '/Common/shouye2.png',
+                },
+                {
+                    class: '',
+                    img1: '/Common/shebao1.png',
+                    img2: '/Common/shebao2.png',
+                },
+                {
+                    class: '',
+                    img1: '/Common/faxian1.png',
+                    img2: '/Common/faxian2.png',
+                },
+                {
+                    class: '',
+                    img1: '/Common/wode1.png',
+                    img2: '/Common/wode2.png',
+                }
+            ],
+            city: '',
+            activity1: {},
+            activity1Url: '',
+            activity2: {},
+            activity2Url: '',
+            hot_article: [],
+            mid_banner: [],
+            my_share: null,
+            wap_about: null
+        },
+        protected: {
+            backIndex: ""
+        },
+        onReady() {
+            this.establishRef();
+        },
+        establishRef() {
+            const siblingVm1 = this.$vm('personal');
+            const siblingVm2 = this.$vm('index');
+            const siblingVm3 = this.$vm('shebao');
+            siblingVm3.parentVm = this;
+            siblingVm3.nextVm = siblingVm1;
+            siblingVm1.parentVm = this;
+            siblingVm1.previousVm = siblingVm3;
+            siblingVm1.nextVm = siblingVm2;
+            siblingVm2.parentVm = this;
+            siblingVm2.previousVm = siblingVm1;
+        },
+        selectedPosition() {
+            router.push({
+                uri: '/SelectPosition',
+                params: { from: 'Index' }
+            })
+        },
+        onShow() {
+            $umeng_stat.resume(this);
+        },
+        onHide() {
+            $umeng_stat.pause(this);
+        },
+        onInit() {
+            // if (this.backIndex != '') {
+            //     this.tabArr.forEach((item, index) => {
+            //         item.class = arg == index ? 'selected' : '';
+            //         item.img = arg == index ? 2 : 1;
+            //     });
+            //     switch (arg) {
+            //         case 0: this.titleTxt = '人人社保'; break;
+            //         case 1: this.titleTxt = '社保'; break;
+            //         case 2: this.titleTxt = '发现'; break;
+            //         case 3: this.titleTxt = '我的'; break;
+            //     }
+            //     this.backColor = arg == 3 ? '#4b80fe' : 'transparent';
+            //     this.txtColor = arg == 3 ? '#fff' : '#414141';
+            // } else {
+
+            // }
+            return new Promise((resolve, reject) => {
+                router.clear();
+                fetch.fetch({
+                    url: this.$app.$def.baseUrl + '/api/shebao/sys/home_config',
+                    method: 'get',
+                    header: {
+                        "User-Token": '',
+                        "App-Version": '1.5.3', 
+                        "User-Device-Type": 'quickapp', 
+                        
+                        "device_type": "quickapp",
+                        "channel": this.$app.$def.brand,
+                        "app_version": this.$app.$def.appVersion,
+                        "appid": this.$app.$def.appId, 
+                    },
+                    success: (res) => {
+                        res = JSON.parse(res.data);
+                        if (res.code == "1") {
+                            this.activity1 = res.data.activity[0];
+                            this.activity1Url = res.data.activity[0].extend.url;
+                            this.activity2Url = res.data.activity[1].extend.url;
+                            this.activity2 = res.data.activity[1];
+                            this.hot_article = res.data.hot_article; 
+                            this.mid_banner = res.data.mid_banner;
+                            this.my_share = res.data.my_share;
+                            this.wap_about = res.data.wap_about;
+                            this.$app.$def.canSearch = res.data.current_version.lead == 1 ? true : false;
+                            this.$app.$def.downUrl = res.data.current_version.app_url ? res.data.current_version.app_url : '';
+                            console.log(res.data.my_share.android_download )
+                            console.log(res.data.current_version.lead )
+                            storage.set({
+                                key: 'login_agreement',
+                                value: res.data.login_agreement,
+                                success: function (data) {
+
+                                },
+                                fail: function (data, code) {
+                                    console.log("handling fail, code = " + code);
+                                }
+                            })
+                            storage.set({
+                                key: 'agreement',
+                                value: res.data.agreement,
+                                success: function (data) {
+
+                                },
+                                fail: function (data, code) {
+                                    console.log("handling fail, code = " + code);
+                                }
+                            })
+                            storage.set({
+                                key: 'wap_about',
+                                value: res.data.wap_about,
+                                success: function (data) {
+
+                                },
+                                fail: function (data, code) {
+                                    console.log("handling fail, code = " + code);
+                                }
+                            })
+                            let that = this;
+                            //如果不支持定位
+                            if (geolocation.getLocation == undefined) {
+                                resolve();
+                                prompt.showToast({
+                                    message: '抱歉您的手机不支持快应用定位!'
+                                })
+                            }
+                            //首次进入做定位，后面改完不再定位
+                            if (this.$app.$def.autoPosition) {
+                                this.city = '正在定位中'
+                                try {                                  
+                                    geolocation.getLocation({
+                                        timeout: 3000,
+                                        success: function (data1) {
+                                            fetch.fetch({
+                                                header: {
+                                                    "device_type": "quickapp",
+                                                    "channel": that.$app.$def.brand,
+                                                    "app_version": that.$app.$def.appVersion,
+                                                    "appid": that.$app.$def.appId
+                                                },
+                                                url: 'http://api.map.baidu.com/geocoder/v2/?ak=Su9wzH4KOMLzQzus0ZUNG9HcW6SNtTRN&callback=?&location=' + data1.latitude + ',' + data1.longitude + '&output=json&pois=1',
+                                                success: function (data2) {
+                                                    let res1 = JSON.parse(data2.data);
+                                                    if(res1.status == 302){
+                                                        console.log('in')
+                                                          that.$app.$def.city = '选择城市';
+                                                            that.city = '选择城市';
+                                                            prompt.showToast({
+                                                                message: '请手动选择城市'
+                                                            })
+        
+                                                    }else{
+                                                        that.city = res1.result.addressComponent.city;
+                                                        let cityCode = res1.result.addressComponent.adcode.substring(0, 4);
+                                                        cityCode += '00';
+                                                        that.$app.$def.city_id = cityCode;
+                                                        that.$app.$def.city = res1.result.addressComponent.city.substring(0, res1.result.addressComponent.city.length - 1);
+                                                        resolve();
+                                                    }
+                                                },
+                                                fail: function (data1, code) {
+                                                    console.log("handling fail, code = " + code);
+                                                }
+                                            })
+                                        },
+                                        fail: function (data1, code) {
+                                            that.$app.$def.city = '选择城市';
+                                            that.city = '选择城市';
+                                            prompt.showToast({
+                                                message: '请手动选择城市'
+                                            })
+                                        }
+                                    })
+                                } catch (error) {
+                                    that.$app.$def.city = '选择城市';
+                                    that.city = '选择城市';
+                                    prompt.showToast({
+                                        message: '请手动选择城市'
+                                    })
+                                }
+
+                            } else {
+                                this.city = that.$app.$def.city;
+                            }
+                        } else {
+                            prompt.showToast({
+                                message: res.msg
+                            })
+                        }
+                    },
+                    fail: function (data, code) {
+                        prompt.showToast({
+                            message: '网络故障'
+                        })
+                        console.log(data)
+                    }
+                })
+            })
+        },
+        writeIndex(e) {
+            let arg = e.index;
+            this.tabArr.map((item, index) => {
+                item.class = arg == index ? 'selected' : '';
+                item.img = arg == index ? 2 : 1;
+            });
+            if (arg == 0) {
+                this.titleTxt = '人人社保';
+            } else if (arg == 1) {
+                this.titleTxt = '社保';
+            } else if (arg == 2) {
+                this.titleTxt = '发现';
+            } else if (arg == 3) {
+                this.titleTxt = '我的';
+            }
+        },
+        refresh(e) {
+            this.isreFresh = e.refreshing;
+            this.onInit().then(() => {
+                this.isreFresh = false;
+            })
+        },
+        cutApp() {
+            this.$app.$def.createShortcut();
+        }
+    }  
+</script>

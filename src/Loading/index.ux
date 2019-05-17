@@ -1,0 +1,204 @@
+<template>
+    <!-- template里只能有一个根节点 -->
+    <stack class="demo-page">
+        <image class="bigImg" src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/loading/bg.jpg"></image>
+        <div class="content">
+            <div class="pro">
+                <stack>
+                    <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/loading/pro.png"></image>
+                    <text>{{num}}%</text>
+                </stack>
+            </div>
+            <div class="box">
+                <text>验证并加密传输数据...</text>
+                <text>正在查询请稍后</text>
+            </div>
+            <stack class="btn">
+                <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/loading/btn.png"></image>
+                <input type="button" onclick="close" />
+            </stack>
+            <div class="form" if="supShow">
+                <text>请填写{{search.type=='MOBILE'?'短信验证码':'图片验证码'}}</text>
+                <div class="item codeImg" if="{{search.type=='PICTURE'}}">
+                    <image src="{{search.picture}}"></image>
+                </div>
+                <div class="item">
+                    <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/query/id.png"></image>
+                    <input placeholder="{{search.message}}" onchange="getSearch" />
+                </div>
+                <input class="queryBtn" type="button" value="继续查询" onclick="saerchResult" />
+            </div>
+        </div>
+    </stack>
+</template>
+
+<style src="./loading.less" lang="less"></style>
+
+<script>
+    import router from '@system.router'
+    import fetch from '@system.fetch'
+    import prompt from '@system.prompt'
+    import storage from '@system.storage'
+    export default {
+        // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
+        private: {
+            num: 0,
+            time: '',
+            search: {
+                type: 'PICTURE',
+                message: '请输入验证码',
+                picture: '',
+            },
+            addMsg: '',
+            token: '',
+            supShow: false
+        },
+        protected: {
+            taskId: ''
+        },
+        onShow() {
+            $umeng_stat.resume(this);
+        },
+        onHide() {
+            $umeng_stat.pause(this);
+        },
+        onInit() {
+            storage.get({
+                key: 'token',
+                success: (data) => {
+                    this.token = data;
+                    this.time = setInterval(() => {
+                        this.req(data);
+                        this.num++;
+                        if (this.num == 99) {
+                            clearInterval(this.time);
+                        }
+                    }, 5000)
+                },
+                fail: function (data, code) {
+                    console.log("handling fail, code = " + code);
+                }
+            })
+        },
+        close() {
+            router.replace({
+                uri: '/Query'
+            })
+        },
+        req(dd) {
+            fetch.fetch({
+                url: this.$app.$def.baseUrl + '/api/shebao/task/task_status',
+                header: {
+                    "User-Token": dd,
+                    "User-Device-Type": 'quickapp',
+                    "App-Version": '1',
+                    "device_type": "quickapp",
+                    "channel": this.$app.$def.brand,
+                    "app_version": this.$app.$def.appVersion,
+                    "appid": this.$app.$def.appId
+                },
+                data: {
+                    task_id: this.taskId
+                },
+                success: (res) => {
+                    res = JSON.parse(res.data);
+                    switch (res.code) {
+                        case 1:
+                            //成功
+                            clearInterval(this.time);
+                            router.push({
+                                uri: '/QueryResult',
+                                params: { taskId: this.taskId }
+                            })
+                            break;
+                        case 10003:
+                            //补充信息
+                            this.search = res.data;
+                            this.supShow = true;
+                            clearInterval(this.time);
+                            break;
+                        case 10001:
+                            //继续查询 
+                            break;
+                        default:
+                            let msg;
+                            if (res.msg.includes('注册')) {
+                                msg = '请去当地的社保中心完善个人信息并注册'
+                            } else {
+                                msg = res.msg;
+                            }
+                            prompt.showDialog({
+                                title: '提示',
+                                message: msg,
+                                buttons: [
+                                    {
+                                        text: '确定',
+                                        color: '#33dd44'
+                                    }
+                                ],
+                                success: function (data) {
+                                    router.replace({
+                                        uri: '/Query'
+                                    })
+                                },
+                                cancel: function () {
+
+                                },
+                                fail: function (data, code) {
+                                    console.log(`handling fail, code = ${code}`)
+                                }
+                            })
+                            break;
+                    }
+                },
+                fail: function (data, code) {
+                    console.log("handling fail, code = " + code);
+                }
+            })
+        },
+        getSearch(value) {
+            this.addMsg = value.text;
+        },
+        saerchResult() {
+            let obj = {
+                task_id: this.taskId,
+                refresh: 'n'
+            };
+            if (this.search.type == "PICTURE") {
+                obj.captcha_picture = this.addMsg;
+            } else {
+                obj.captcha_mobile = this.addMsg;
+            }
+            fetch.fetch({
+                header: {
+                    "device_type": "quickapp",
+                    "channel": this.$app.$def.brand,
+                    "app_version": this.$app.$def.appVersion,
+                    "appid": this.$app.$def.appId
+                },
+                url: this.$app.$def.baseUrl + '/api/shebao/task/auth_login_replenish',
+                data: obj,
+                success: (data) => {
+                    let res = JSON.parse(data.data);
+                    //验证信息成功继续轮询
+                    if (res.code != 1) {
+                        prompt.showToast({
+                            message: res.msg
+                        })
+                    }
+                    this.supShow = false;
+                    this.time = setInterval(() => {
+                        this.req(this.token);
+                        this.num++;
+                        if (this.num == 99) {
+                            clearInterval(this.time);
+                        }
+                    }, 5000)
+                },
+                fail: function (data, code) {
+                    console.log("handling fail, code = " + code);
+                }
+            })
+        }
+    }
+</script>

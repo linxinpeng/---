@@ -1,0 +1,162 @@
+<template>
+    <!-- template里只能有一个根节点 -->
+    <div class="main">
+        <div class="topTitle">
+            <stack>
+                <input type="button" value="返回" onclick="backIndex"></input>
+                <text>{{title}}</text>
+            </stack>
+        </div>
+        <web src="{{analysis1}}" if="{{this.tabArr[0].class=='selected'}}"></web>
+        <web src="{{analysis2}}" elif="{{this.tabArr[1].class=='selected'}}"></web>
+        <web src="{{analysis3}}" elif="{{this.tabArr[2].class=='selected'}}"></web>
+        <web src="{{analysis4}}" elif="{{this.tabArr[3].class=='selected'}}"></web>
+        <web src="{{analysis5}}" elif="{{this.tabArr[4].class=='selected'}}"></web>
+        <!-- <tabs onchange="tabChange">
+            <tab-bar class="tab-bar">
+                <text class="{{tabArr[0].class}}">医疗保险</text>
+                <text class="{{tabArr[1].class}}">养老保险</text>
+                <text class="{{tabArr[2].class}}">生育保险</text>
+                <text class="{{tabArr[3].class}}">失业保险</text>
+                <text class="{{tabArr[4].class}}">工伤保险</text>
+            </tab-bar>
+            <tab-content class="tab-content">
+                <div class="tab-content-section">
+                    
+                </div>
+                <div class="tab-content-section">
+                    <web src="{{analysis2}}"></web>
+                </div>
+                <div class="tab-content-section">
+                    <web src="{{analysis3}}"></web>
+                </div>
+                <div class="tab-content-section">
+                    <web src="{{analysis4}}"></web>
+                </div>
+                <div class="tab-content-section">
+                    <web src="{{analysis5}}"></web>
+                </div>
+            </tab-content>
+        </tabs> -->
+    </div>
+</template>
+
+<style src="./indexDetail.less" lang="less"></style>
+
+<script>
+    import fetch from '@system.fetch'
+    import webview from '@system.webview'
+    import prompt from '@system.prompt'
+    import router from '@system.router'
+    import storage from '@system.storage'
+    export default {
+        // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
+        private: {
+            analysis1: '',
+            analysis2: '',
+            analysis3: '',
+            analysis4: '',
+            analysis5: '',
+            tabArr: [
+                { class: '' },
+                { class: '' },
+                { class: '' },
+                { class: '' },
+                { class: '' }
+            ],
+            title: ''
+        },
+        protected: {
+            name: ''
+        },
+        onShow() {
+            $umeng_stat.resume(this);
+        },
+        onHide() {
+            $umeng_stat.pause(this);
+        },
+        onInit() {
+            storage.get({
+                key: 'isFirstAnlaysize',
+                success: (data) => {
+                    if (data == '') {
+                        storage.set({
+                            key: 'isFirstAnlaysize',
+                            value: 'true',
+                            success: (data) => {
+                                prompt.showToast({
+                                    message: '若当前城市无服务，默认显示北京'
+                                })
+                            },
+                            fail: function (data, code) {
+                                console.log(`handling fail, code = ${code}`)
+                            }
+                        })
+                    }
+                },
+                fail: function (data, code) {
+                    console.log("handling fail, code = " + code);
+                }
+            })
+            this.tabArr.map((item) => {
+                item.class = '';
+            });
+            switch (this.name) {
+                case 'yiliaobaoxian': this.title = '医疗保险'; this.tabArr[0].class = 'selected'; break;
+                case 'yanglaobaoxian': this.title = '养老保险'; this.tabArr[1].class = 'selected'; break;
+                case 'shiyebaoxian': this.title = '失业保险'; this.tabArr[3].class = 'selected'; break;
+                case 'shengyubaoxian': this.title = '生育保险'; this.tabArr[2].class = 'selected'; break;
+                case 'gongshangbaoxian': this.title = '工伤保险'; this.tabArr[4].class = 'selected'; break;
+            }
+            fetch.fetch({
+                header: {
+                    "device_type": "quickapp",
+                    "channel": this.$app.$def.brand,
+                    "app_version": this.$app.$def.appVersion,
+                    "appid": this.$app.$def.appId
+                },
+                url: this.$app.$def.baseUrl + '/api/shebao/categories/article_single',
+                method: 'get',
+                data: {
+                    en: 'shebaofenxi',
+                    city_id: this.$app.$def.city_id == '' ? '100010' : this.$app.$def.city_id
+                },
+                success: (res) => {
+                    res = JSON.parse(res.data);
+                    if (res.code == "1") {
+                        res.data.map((item) => {
+                            switch (item.category_name) {
+                                case '医疗保险': this.analysis1 = item.article.href; break;
+                                case '养老保险': this.analysis2 = item.article.href; break;
+                                case '生育保险': this.analysis3 = item.article.href; break;
+                                case '失业保险': this.analysis4 = item.article.href; break;
+                                case '工伤保险': this.analysis5 = item.article.href; break;
+                            }
+                        });
+
+                    } else {
+                        prompt.showToast({
+                            message: res.msg
+                        })
+                    }
+                },
+                fail: function (data, code) {
+                    prompt.showToast({
+                        message: '网络故障'
+                    })
+                    console.log(data)
+                }
+            })
+        },
+        tabChange(etv) {
+            this.tabArr.map((item) => { 
+                item.class = '';
+            })
+            this.tabArr[etv.index].class = 'selected'
+        },
+        backIndex() {
+            router.back();
+        }
+
+    }
+</script>

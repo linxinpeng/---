@@ -1,0 +1,98 @@
+<template>
+    <!-- template里只能有一个根节点 -->
+    <div class="demo-page">
+        <div class="topTitle">
+            <stack>
+                <input type="button" value="返回" onclick="backIndex"></input>
+                <text>意见反馈</text>
+            </stack>
+        </div>
+        <textarea id="advice" placeholder="请详细描述你的问题和意见" maxlength="200" onchange="search">
+
+        </textarea>
+        <input type="button" class="subBtn" style="opacity:{{kg?'0.3':'1'}}" value="提交" onclick="sendAdvice"></input>
+    </div>
+</template>
+<style src="./advice.less" lang="less"></style>
+<script>
+    import router from '@system.router'
+    import fetch from '@system.fetch'
+    import prompt from '@system.prompt'
+    import storage from '@system.storage'
+    export default {
+        // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
+        private: {
+            kg: true,
+            txt: '',
+            token: ''
+        },
+        onShow() {
+            $umeng_stat.resume(this);
+        },
+        onHide() {
+            $umeng_stat.pause(this);
+        },
+        onInit() { 
+            storage.get({
+                key: 'token',
+                success: (data) => {
+                    this.token = data;
+                },
+                fail: function (data, code) {
+                    console.log("handling fail, code = " + code);
+                }
+            })
+
+        },
+        sendAdvice() {
+            if (this.kg) {
+                prompt.showToast({
+                    message: '请向填写问题和意见~'
+                })
+            } else {
+                fetch.fetch({
+                    url: this.$app.$def.baseUrl + '/api/shebao/feedback/add',
+                    header: {
+                        "User-Token": this.token,
+                        "User-Device-Type": "quickapp",
+                        "device_type": "quickapp",
+                        "channel": this.$app.$def.brand,
+                        "app_version": this.$app.$def.appVersion,
+                        "appid": this.$app.$def.appId
+                    },
+                    method: 'POST',
+                    data: {
+                        text: this.txt
+                    },
+                    success: function (data) {
+                        let res = JSON.parse(data.data);
+                        prompt.showToast({
+                            message: res.msg
+                        })
+                        console.log(res.code);
+                        if (res.code == 1) {
+                            setTimeout(() => {
+                                router.push({
+                                    uri: '/Index'
+                                })
+                            }, 1000);
+                        }
+                    },
+                    fail: function (data, code) {
+                        console.log("handling fail, code = " + code);
+                    }
+                })
+            }
+        },
+        search(ev) {
+            this.kg = ev.text.length <= 0 ? true : false;
+            this.txt = ev.text;
+        },
+        backIndex() {
+            router.push({
+                uri:'/Index'
+            })
+        }
+
+    }
+</script>

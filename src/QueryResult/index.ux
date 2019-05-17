@@ -1,0 +1,517 @@
+<template>
+    <!-- template里只能有一个根节点 -->
+    <div class="demo-page">
+        <div class="topTitle">
+
+            <input type="button" class="back" value="返回" onclick="backIndex"></input>
+            <text>查询结果</text>
+            <input type="button" class="refresh" value="更新" onclick="refresh"></input>
+
+        </div>
+        <div class="header">
+            <stack>
+                <div class="top">
+                    <text class="name">
+                        <span>{{infor.name}}</span>
+                        <span class="company">({{infor.company_name==''?'无':infor.company_name}})</span>
+                    </text>
+                    <text class="time">最后更新:{{infor.u_time}}</text>
+                </div>
+                <div class="right">
+                    <image class="img" if="{{infor.state=='正常参保'}}" src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/result/normal.png"></image>
+                    <image class="img" else src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/result/error.png"></image>
+                </div>
+            </stack>
+            <div class="bottom">
+                <div class="item">
+                    <text class="name">医保余额(元)</text>
+                    <text class="number">{{fixTo2(medical_overview.balance)}}</text>
+                </div>
+                <div class="item">
+                    <text class="name">养老余额(元)</text>
+                    <text class="number">{{fixTo2(endowment_overview.balance)}}</text>
+                </div>
+                <div class="item">
+                    <text class="name">累计缴纳(月)</text>
+                    <text class="number">{{medical_overview.total_income_month}}</text>
+                </div>
+            </div>
+        </div>
+        <div class="content">
+            <tabs onchange="onChangeTabIndex">
+                <tab-bar class="tab-bar">
+                    <text class="{{tabArr[0].class}}">数据分析</text>
+                    <text class="{{tabArr[1].class}}">缴存明细</text>
+                    <text class="{{tabArr[2].class}}">医疗记录</text>
+                </tab-bar>
+                <tab-content class="tab-content">
+                    <div class="tab-content-section">
+                        <div class="firstItem">
+                            <div style="height:120px;align-items:center;justify-content:center;width:100%;">
+                                <text class="time">{{year}}年{{month}}月 缴费数据分析</text>
+                            </div>
+                            <div class="title">
+                                <div class="border"></div>
+                                <text>详细缴费比例</text>
+                            </div>
+                            <div class="table">
+                                <div class="th">
+                                    <text>缴费项目</text>
+                                    <text>缴费比例</text>
+                                    <text>单位缴纳</text>
+                                    <text>个人缴纳</text>
+                                    <text>合计</text>
+                                </div>
+                                <div class="tr tr1">
+                                    <text>医保</text>
+                                    <text>{{toPerecent(medical_insurance.company_percentage+medical_insurance.personal_percentage)}}%</text>
+                                    <text>{{toInit(medical_insurance.monthly_company_income)}}</text>
+                                    <text>{{toInit(medical_insurance.monthly_personal_income)}}</text>
+                                    <text>{{toInit(medical_insurance.sum)}}</text>
+                                </div>
+                                <div class="tr">
+                                    <text>养老</text>
+                                    <text>{{toPerecent(endowment_insurance.company_percentage+endowment_insurance.personal_percentage)}}%</text>
+                                    <text>{{toInit(endowment_insurance.monthly_company_income)}}</text>
+                                    <text>{{toInit(endowment_insurance.monthly_personal_income)}}</text>
+                                    <text>{{toInit(endowment_insurance.sum)}}</text>
+                                </div>
+                                <div class="tr tr1">
+                                    <text>生育</text>
+                                    <text>{{toPerecent(maternity_insurance.company_percentage+maternity_insurance.personal_percentage)}}%</text>
+                                    <text>{{toInit(maternity_insurance.monthly_company_income)}}</text>
+                                    <text>{{toInit(maternity_insurance.monthly_personal_income)}}</text>
+                                    <text>{{toInit(maternity_insurance.sum)}}</text>
+                                </div>
+                                <div class="tr">
+                                    <text>失业</text>
+                                    <text>{{toPerecent(unemployment_insurance.company_percentage+unemployment_insurance.personal_percentage)}}%</text>
+                                    <text>{{toInit(unemployment_insurance.monthly_company_income)}}</text>
+                                    <text>{{toInit(unemployment_insurance.monthly_personal_income)}}</text>
+                                    <text>{{toInit(unemployment_insurance.sum)}}</text>
+                                </div>
+                                <div class="tr tr1">
+                                    <text>工伤</text>
+                                    <text>{{toPerecent(accident_insurance.company_percentage+accident_insurance.personal_percentage)}}%</text>
+                                    <text>{{toInit(accident_insurance.monthly_company_income)}}</text>
+                                    <text>{{toInit(accident_insurance.monthly_personal_income)}}</text>
+                                    <text>{{toInit(accident_insurance.sum)}}</text>
+                                </div>
+                                <div class="tr">
+                                    <text>合计</text>
+                                    <text>-</text>
+                                    <text>{{toInit(medical_insurance.monthly_company_income+endowment_insurance.monthly_company_income+maternity_insurance.monthly_company_income+unemployment_insurance.monthly_company_income+accident_insurance.monthly_company_income)}}</text>
+                                    <text>{{toInit(medical_insurance.monthly_personal_income+endowment_insurance.monthly_personal_income+maternity_insurance.monthly_personal_income+unemployment_insurance.monthly_personal_income+accident_insurance.monthly_personal_income)}}</text>
+                                    <text>{{toInit(medical_insurance.sum+endowment_insurance.sum+maternity_insurance.sum+unemployment_insurance.sum+accident_insurance.sum)}}</text>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-content-section">
+                        <div class="secondItem">
+                            <div class="item" onclick="detail(1)">
+                                <div>
+                                    <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/result/yiliao.png" class="icon"></image>
+                                    <text>医疗保险</text>
+                                </div>
+                                <div style="align-items:center;">
+                                    <text class="num"></text>
+                                    <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/personal/arrow.png" class="arrow"></image>
+                                </div>
+                            </div>
+                            <div class="item" onclick="detail(2)">
+                                <div>
+                                    <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/result/yanlao.png" class="icon"></image>
+                                    <text>养老保险</text>
+                                </div>
+                                <div style="align-items:center;">
+                                    <text class="num"></text>
+                                    <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/personal/arrow.png" class="arrow"></image>
+                                </div>
+                            </div>
+                            <div class="item" onclick="detail(3)">
+                                <div>
+                                    <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/result/shengyu.png" class="icon"></image>
+                                    <text>生育保险</text>
+                                </div>
+                                <div style="align-items:center;">
+                                    <text class="num"></text>
+                                    <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/personal/arrow.png" class="arrow"></image>
+                                </div>
+                            </div>
+                            <div class="item" onclick="detail(4)">
+                                <div>
+                                    <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/result/shiye.png" class="icon"></image>
+                                    <text>失业保险</text>
+                                </div>
+                                <div style="align-items:center;">
+                                    <text class="num"></text>
+                                    <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/personal/arrow.png" class="arrow"></image>
+                                </div>
+                            </div>
+                            <div class="item" onclick="detail(5)">
+                                <div>
+                                    <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/result/gongshang.png" class="icon"></image>
+                                    <text>工伤保险</text>
+                                </div>
+                                <div style="align-items:center;">
+                                    <text class="num"></text>
+                                    <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/personal/arrow.png" class="arrow"></image>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="tab-content-section">
+                        <div class="thirdItem">
+                            <div class="item" for="{{medicalSpendRecord}}">
+                                <div>
+                                    <div style="flex-direction: column;">
+                                        <div style="margin-bottom: 26px;align-items:center;">
+                                            <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/result/clock.png"></image>
+                                            <text>{{$item.time}}</text>
+                                        </div>
+                                        <text style="margin-left:47px;">{{$item.hosipital}}</text>
+                                    </div>
+                                </div>
+                                <text class="price">¥{{fixTo2($item.money)}}</text>
+                            </div>
+                            <div if="noMore" class="loadMore">
+                                <text style="width:100%;text-align:center;">已无更多</text>
+                            </div>
+                            <div else onclick="loadMore" class="loadMore">
+                                <text style="width:100%;text-align:center;">点击加载更多</text>
+                            </div>
+                        </div>
+                    </div>
+                </tab-content>
+            </tabs>
+        </div>
+    </div>
+</template>
+
+<style src="./queryResult.less" lang="less"></style>
+
+<script>
+    import router from '@system.router'
+    import storage from '@system.storage'
+    import fetch from '@system.fetch'
+    import prompt from '@system.prompt'
+
+    export default {
+        // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
+        private: {
+            sendId: '',
+            medicalSpendRecord: [],
+            infor: '',
+            isNormal: true,
+            noMore: false,
+            tabArr: [
+                { class: 'selected' },
+                { class: '' },
+                { class: '' }
+            ],
+            token: '',
+            year: '',
+            month: '',
+            medical_overview: {},
+            endowment_overview: {},
+            endowment_insurance: '',
+            medical_insurance: '',
+            unemployment_insurance: '',
+            accident_insurance: '',
+            maternity_insurance: '',
+            page: 1
+        },
+        protected: {
+            taskId: ''
+        },
+        onShow() {
+            $umeng_stat.resume(this);
+        },
+        onHide() {
+            $umeng_stat.pause(this);
+        },
+        onInit() {
+            this.sendId = this.taskId;
+            this.$app.$def.isSearch = true;
+            storage.get({
+                key: 'token',
+                success: (data) => {
+                    this.token = data;
+                    //获取头部信息
+                    fetch.fetch({
+                        url: this.$app.$def.baseUrl + '/api/shebao/data/overview',
+                        header: {
+                            'User-Token': data,
+                            'User-Device-Type': 'quickapp',
+                            'app-version': '1',
+                            "device_type": "quickapp",
+                            "channel": this.$app.$def.brand,
+                            "app_version": this.$app.$def.appVersion,
+                            "appid": this.$app.$def.appId
+                        },
+                        data: {
+                            task_id: this.taskId
+                        },
+                        success: (data1) => {
+                            let res = JSON.parse(data1.data);
+                            if (res.code == 1) {
+                                this.infor = res.data;
+                                let obj = {};
+                                if (res.data.endowment_overview.total_income_month != 0) {
+                                    this.endowment_overview = res.data.endowment_overview;
+                                    this.medical_overview = res.data.medical_overview;
+                                    obj.mMonth = res.data.medical_overview.total_income_month;
+                                    obj.oMonth = res.data.endowment_overview.total_income_month;
+                                } else {
+                                    this.endowment_overview = {
+                                        total_income_month: res.data.endowment_overview.total_income_month,
+                                        balance: 0
+                                    }
+                                    this.medical_overview = {
+                                        balance: 0,
+                                        total_income_month: 0,
+                                    }
+                                    obj.mMonth = 0;
+                                    obj.oMonth = 0;
+                                }
+                                obj.name = res.data.name;
+                                obj.taskId = this.taskId;
+                                obj.lastTime = res.data.u_time;
+                                obj.isNormal = res.data.state == '正常参保' ? true : false;
+                                storage.set({
+                                    key: 'detail',
+                                    value: JSON.stringify(obj),
+                                    success: function (data) {
+                                        console.log("handling success");
+                                    },
+                                    fail: function (data, code) {
+                                        console.log("handling fail, code = " + code);
+                                    }
+                                })
+                            } else {
+                                //别的APP查询后切换APP
+                                if (res.code == 10002) {
+                                    prompt.showToast({
+                                        message: '登陆过期请重新登陆',
+                                        duration: 2000,
+                                        gravity: 'center'
+                                    })
+                                    router.replace({
+                                        uri: '/Login'
+                                    })
+                                }
+                            }
+                        },
+                        fail: function (data2, code) {
+                            console.log("handling fail, code = " + code);
+                        }
+                    })
+                    //获取表格信息
+                    fetch.fetch({
+                        url: this.$app.$def.baseUrl + '/api/shebao/data/insurance_month',
+                        header: {
+                            'User-Token': data,
+                            'User-Device-Type': 'quickapp',
+                            'app-version': '1',
+                            "device_type": "quickapp",
+                            "channel": this.$app.$def.brand,
+                            "app_version": this.$app.$def.appVersion,
+                            "appid": this.$app.$def.appId
+                        },
+                        data: {
+                            task_id: this.taskId,
+                            now_month: ''
+                        },
+                        success: (data1) => {
+                            let res = JSON.parse(data1.data)
+                            if (res.code == 1) {
+                                if (res.data.percentage.endowment_insurance) {
+                                    this.endowment_insurance = res.data.percentage.endowment_insurance;
+                                    this.medical_insurance = res.data.percentage.medical_insurance;
+                                    this.unemployment_insurance = res.data.percentage.unemployment_insurance;
+                                    this.accident_insurance = res.data.percentage.accident_insurance;
+                                    this.maternity_insurance = res.data.percentage.maternity_insurance;
+                                } else {
+                                    let obj = {
+                                        company_percentage: 0,
+                                        monthly_company_income: 0,
+                                        monthly_personal_income: 0,
+                                        personal_percentage: 0,
+                                        sum: 0,
+                                    }
+                                    this.endowment_insurance = obj;
+                                    this.medical_insurance = obj;
+                                    this.unemployment_insurance = obj;
+                                    this.accident_insurance = obj;
+                                    this.maternity_insurance = obj;
+                                }
+                                this.year = res.data.now_month.substring(0, 4);
+                                this.month = res.data.now_month.substring(4, res.data.now_month.length);
+                            }
+                        },
+                        fail: function (data2, code) {
+                            console.log("handling fail, code = " + code);
+                        }
+                    })
+                    //获取医疗记录
+                    fetch.fetch({
+                        url: this.$app.$def.baseUrl + '/api/shebao/data/insurance',
+                        header: {
+                            'User-Token': data,
+                            'User-Device-Type': 'quickapp',
+                            'app-version': '1',
+                            "device_type": "quickapp",
+                            "channel": this.$app.$def.brand,
+                            "app_version": this.$app.$def.appVersion,
+                            "appid": this.$app.$def.appId
+                        },
+                        data: {
+                            //task_id: '5jpc02hhm095u',
+                            task_id: this.taskId,
+                            category: 'medical_consumption',
+                            page: this.page
+                        },
+                        success: (data1) => {
+                            let res = JSON.parse(data1.data)
+                            if (res.code == 1 && res.data.list && res.data.list.length > 0) {
+                                res.data.list.map((item, index) => {
+                                    let obj = { time: '', money: '', hosipital: '' };
+                                    obj.time = item.balance_date;
+                                    obj.money = item.total_amount;
+                                    obj.hosipital = item.medical_institution;
+                                    this.medicalSpendRecord.push(obj);
+                                })
+                            }
+                        },
+                        fail: function (data2, code) {
+                            console.log("handling fail, code = " + code);
+                        }
+                    })
+                },
+                fail: function (data, code) {
+                    console.log("handling fail, code = " + code);
+                }
+            })
+        },
+        routeDetail() {
+            // 跳转到应用内的某个页面，router用法详见：文档->接口->页面路由
+            router.push({
+                uri: '/DemoDetail'
+            })
+        },
+        onChangeTabIndex(evt) {
+            this.tabArr.map((item, index) => {
+                item.class = '';
+            })
+            this.tabArr[evt.index].class = 'selected';
+        },
+        fixTo2(value) {
+            return (parseFloat(value) / 100).toFixed(2);
+        },
+        toInit(value) {
+            return (parseInt(value) / 100).toFixed(0);
+        },
+        toPerecent(value) {
+            return (parseFloat(value) * 100).toFixed(1)
+        },
+        loadMore() {
+            fetch.fetch({
+                url: this.$app.$def.baseUrl + '/api/shebao/data/insurance',
+                header: {
+                    'User-Token': this.token,
+                    'User-Device-Type': 'quickapp',
+                    'app-version': '1',
+                    "device_type": "quickapp",
+                    "channel": this.$app.$def.brand,
+                    "app_version": this.$app.$def.appVersion,
+                    "appid": this.$app.$def.appId
+                },
+                data: {
+                    // task_id: '5jpc02hhm095u',
+                    task_id: this.taskId,
+                    category: 'medical_consumption',
+                    page: ++this.page
+                },
+                success: (data1) => {
+                    let res = JSON.parse(data1.data);
+                    if (res.code == 1 && res.data.list && res.data.list.length > 0) {
+                        res.data.list.map((item, index) => {
+                            let obj = { time: '', money: '', hosipital: '' };
+                            obj.time = item.balance_date;
+                            obj.money = item.total_amount;
+                            obj.hosipital = item.medical_institution;
+                            this.medicalSpendRecord.push(obj);
+                        })
+                    } else {
+                        this.noMore = true;
+                    }
+                },
+                fail: function (data2, code) {
+                    console.log("handling fail, code = " + code);
+                }
+            })
+        },
+        detail(dd) {
+            router.push({
+                uri: '/JiaocunDetail',
+                params: { type: dd, taskId: this.sendId }
+            })
+        },
+        backIndex() {
+            router.push({
+                uri: '/Index'
+            })
+        },
+        refresh() {
+            if (this.$app.$def.canSearch) {
+                prompt.showDialog({
+                    title: '提示',
+                    message: '下载APP才能使用查询社保功能哦~',
+                    buttons: [{
+                        text: '取消',
+                        color: '#999999'
+                    },
+                    {
+                        text: '下载APP',
+                        color: '#4077ff'
+                    }],
+                    success: (data) => {
+                        if (data.index == 1) {
+                             $umeng_stat.trackEvent('gxchaxunxiazai','查询更新下载APP'); //事件ID
+                            router.push({
+                                uri: this.$app.$def.downUrl
+                            })
+                        }
+                    },
+                    cancel: function () {
+                        console.log('handling cancel')
+                    },
+                    fail: function (data, code) {
+                        console.log(`handling fail, code = ${code}`)
+                    }
+                })
+            } else {
+                storage.get({
+                    key: 'token',
+                    success: function (data) {
+                        if (data != '') {
+                            router.push({
+                                uri: '/Query'
+                            })
+                        } else {
+                            router.push({
+                                uri: '/Login',
+                                params: { key: 'Query' }
+                            })
+                        }
+                    },
+                    fail: function (data, code) {
+
+                    }
+                })
+            }
+        }
+    }
+</script>

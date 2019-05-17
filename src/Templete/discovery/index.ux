@@ -1,0 +1,310 @@
+<template>
+    <!-- template里只能有一个根节点 -->
+    <div class="main">
+        <list>
+            <list-item type="box">
+                <div class="header">
+                    <swiper>
+                        <block for="{{banner}}">
+                            <div class="swiperItem" onclick="bannerA($item.web_url)">
+                                <image src="{{$item.img_url}}"></image>
+                            </div>
+                        </block>
+                    </swiper>
+                </div>
+            </list-item>
+            <list-item type="box1">
+                <div class="security">
+                    <text class="title">社保福利</text>
+                    <div class="list">
+                        <block for="welfare">
+                            <div class="litBox" onclick="a($idx)">
+                                <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/discovery/{{$item.img}}.png"></image>
+                                <text>{{$item.name}}</text>
+                            </div>
+                        </block>
+                    </div>
+                </div>
+            </list-item>
+            <list-item type="box2">
+                <div class="info">
+                    <!-- <text class="title">资讯</text> -->
+                    <div class="div-tabs">
+                        <div class="div-tabbar">
+                            <text class="selected">{{title}}</text>
+                        </div>
+                        <div class="div-tabcontent">
+                            <div class="div-tabcontent-section">
+                                <text show="{{articleList.length<=0}}" style="width:100%;text-align:center;">无相关文章</text>
+                                <div class="list" show="{{articleList.length>0}}">
+                                    <block for="{{(index,item) in articleList}}">
+                                        <div class="litBox1" if="{{item.smeta.photos.length!=0}}" onclick="articleDetail(item.href,item.id)">
+                                            <text class="title1">
+                                                {{item.post_title}}
+                                            </text>
+                                            <div class="imgList">
+                                                <image style="resize-mode:cover;" class="image" src="{{item.smeta.photos[0]?item.smeta.photos[0].url:''}}"></image>
+                                                <image style="resize-mode:cover;" class="image" src="{{item.smeta.photos[1]?item.smeta.photos[1].url:''}}"></image>
+                                                <image style="resize-mode:cover;" class="image" src="{{item.smeta.photos[2]?item.smeta.photos[2].url:''}}"></image>
+                                            </div>
+                                            <div class="gT">
+                                                <div class="front">
+                                                    <text class="hot">热</text>
+                                                    <text class="guide">{{item.post_keywords.length>0?item.post_keywords[0]:'推荐'}}</text>
+                                                    <image class="eye" src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/discovery/eye.png"></image>
+                                                    <text class="viewer">{{item.post_hits}}</text>
+                                                </div>
+                                                <div class="end">
+
+                                                    <text class="time">{{translateDate(item.post_date)}}</text>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="litBox2" else onclick="articleDetail(item.href,item.id)">
+                                            <div class="nn">
+                                                <text class="title1">
+                                                    {{item.post_title}}
+                                                </text>
+                                                <image src="{{item.smeta.thumbnail?item.smeta.thumbnail:''}}"></image>
+                                            </div>
+                                            <div class="gT">
+                                                <div class="front">
+                                                    <text class="guide">{{item.post_keywords.length>0?item.post_keywords[0]:'推荐'}}</text>
+                                                    <image class="eye" src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/discovery/eye.png"></image>
+                                                    <text class="viewer">{{item.post_hits}}</text>
+                                                </div>
+                                                <div class="end">
+                                                    <text class="time">{{translateDate(item.post_date)}}</text>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </block>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </list-item>
+               <list-item type="box4">
+                <div class="load-more" style="display:flex;justify-content: center;align-items:center;" onappear="loadMoreData()">
+                    <text style="height:60px;width:100%;text-align:center;line-height:60px;">{{noteMsg}}</text>
+                </div>
+            </list-item>
+            <list-item type="box3">
+                <div style="height:140px;width:100%;"></div>
+            </list-item>
+        </list>
+    </div>
+</template>
+
+<style src="./discovery.less" lang="less"></style>
+
+<script>
+    import fetch from '@system.fetch';
+    import router from '@system.router';
+    import prompt from '@system.prompt';
+
+    export default {
+        // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
+        private: {
+            welfare: [],
+            banner: [],
+            tabArr: [],
+            page: 1,
+            noMore: true,
+            articleList: [],
+            activeIndex: 0,
+            title: '',
+            noteMsg: '正在加载中',
+        },
+        showContent(num) {
+            if (this.activeIndex == num) {
+                return false;
+            }
+            this.activeIndex = num;
+            this.getList(num, this.page = 1);
+        },
+        onInit() {
+            try {
+                //获取福利跳转
+                fetch.fetch({
+                    header: {
+                        "device_type": "quickapp",
+                        "channel": this.$app.$def.brand,
+                        "app_version": this.$app.$def.appVersion,
+                        "appid": this.$app.$def.appId
+                    },
+                    url: this.$app.$def.baseUrl + '/api/shebao/categories/article_single',
+                    data: {
+                        en: 'shebaozhengcejiedu',
+                        city_id: this.$app.$def.city_id == '' ? '100010' : this.$app.$def.city_id
+                    },
+                    success: (res) => {
+                        res = JSON.parse(res.data);
+                        res.data.map((item, index) => {
+                            this.welfare.push({ name: item.category_name, img: item.category_en, href: item.article.href });
+                        })
+                    },
+                    fail: function (data, code) {
+                        console.log("handling fail, code = " + code);
+                    }
+                })
+                //获取轮播
+                fetch.fetch({
+                    url: this.$app.$def.baseUrl + '/api/shebao/sys/discoverConfig',
+                    header: {
+                        "User-Device-Type": 'quickapp',
+                        "App-Version": '1.0.0',
+                        "device_type": "quickapp",
+                        "channel": this.$app.$def.brand,
+                        "app_version": this.$app.$def.appVersion,
+                        "appid": this.$app.$def.appId
+                    },
+                    success: (res) => {
+                        res = JSON.parse(res.data);
+                        this.banner = res.data.discover_banner;
+                    },
+                    fail: function (data, code) {
+                        console.log("handling fail, code = " + code);
+                    }
+                })
+                //获取title
+                fetch.fetch({
+                    url: this.$app.$def.baseUrl + '/api/shebao/sys/home_config',
+                    method: 'get',
+                    header: {
+                        "User-Token": '',
+                        "App-Version": '1.1.0',
+                        "User-Device-Type": 'android',
+                        "device_type": "quickapp",
+                        "channel": this.$app.$def.brand,
+                        "app_version": this.$app.$def.appVersion,
+                        "appid": 4
+                    },
+                    success: (res) => {
+                        res = JSON.parse(res.data);
+                        if (res.code == "1") {
+                            this.tabArr = res.data.strategy_category;
+                            if(res.data.strategy_category.length > 0){
+                                this.title = res.data.strategy_category[0].title;
+                            }
+                            this.getList(0, 1);
+                        } else {
+                            prompt.showToast({
+                                message: res.msg
+                            })
+                        }
+                    },
+                    fail: function (data, code) {
+                        prompt.showToast({
+                            message: '网络故障'
+                        })
+                        console.log(data)
+                    }
+                })
+            } catch (error) {
+
+            }
+        },
+        a(index) {
+            router.push({
+                uri: this.welfare[index].href
+            })
+        },
+        bannerA(d, etv) {
+            router.push({
+                uri: d
+            })
+        },
+        loadMoreData() {
+            if(!this.noMore)return false; 
+            try {
+                fetch.fetch({
+                    header: {
+                        "device_type": "quickapp",
+                        "channel": this.$app.$def.brand,
+                        "app_version": this.$app.$def.appVersion,
+                        "appid": this.$app.$def.appId
+                    },
+                    url: this.$app.$def.baseUrl + '/api/shebao/articles/article_list',
+                    method: 'get',
+                    data: {
+                        "en": this.tabArr[0].category_en,
+                        "page": ++this.page,
+                        "city_id": this.$app.$def.city_id,
+                        "recommended": this.tabArr[0].type
+                    },
+                    success: (res) => {
+                        res = JSON.parse(res.data);
+                        if (res.code == "1") { 
+                            if (res.data.length > 0) {
+                                this.articleList.push(...res.data);
+                            } else {
+                                this.noMore = false; 
+                                this.noteMsg = '已无更多'; 
+                            }
+                        } else {
+                            prompt.showToast({
+                                message: res.msg
+                            })
+                        }
+                    },
+                    fail: function (data, code) {
+                        prompt.showToast({
+                            message: '网络故障获取文章列表失败'
+                        })
+                    }
+                })
+            } catch (error) {
+
+            }
+        },
+        getList(index, page) {
+            fetch.fetch({
+                header: {
+                    "device_type": "quickapp",
+                    "channel": this.$app.$def.brand,
+                    "app_version": this.$app.$def.appVersion,
+                    "appid": this.$app.$def.appId
+                },
+                url: this.$app.$def.baseUrl + '/api/shebao/articles/article_list',
+                method: 'get',
+                data: {
+                    "en": this.tabArr[index].category_en,
+                    "page": page,
+                    "city_id": this.$app.$def.city_id,
+                    "recommended": this.tabArr[index].type
+                },
+                success: (res) => {
+                    res = JSON.parse(res.data);
+                    if (res.code == "1") {
+                        this.articleList = res.data;
+                        if (!res.data.length > 0) {
+                            this.noMore = false;
+                        }
+                        this.page++;
+                    } else {
+                        prompt.showToast({
+                            message: res.msg
+                        })
+                    }
+                },
+                fail: function (data, code) {
+                    prompt.showToast({
+                        message: '网络故障获取文章列表失败'
+                    })
+                    console.log(data)
+                }
+            })
+        },
+        articleDetail(url, id) {
+            router.push({
+                uri: url,
+                params: { id: id }
+            })
+        },
+        translateDate(date) {
+            return date.split(' ')[0]
+        }
+    }
+</script>

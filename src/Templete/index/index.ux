@@ -1,0 +1,289 @@
+<template>
+    <!-- template里只能有一个根节点 -->
+    <div class="main">
+        <list class="flist">
+            <list-item type="box1" class="header middle">
+                    <div class="b-inner" style="background-image:url('http://cdn.shebao.info/html/quick/img/home-bg.png');background-size:100% 100%;">
+                        <div class="i-item" for="(index,item) in header_info" onclick="toUrl(item)">
+                            <image src="{{item.icon}}"></image>
+                            <text>{{item.config_name}}</text>
+                        </div>
+                    </div>
+                    <!-- <image onclick="to" style="width: 100%;height: 100%;resize-mode:stretch;" src="http://cdn.shebao.dai58.cn/upload/portal/20190321/d2f0dec09e572e02a5731afe2c3e838a.png"></image> -->
+                    <!-- <image style="height:100%;width:100%;resize-mode:stretch;" src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/index/indexBg.png"></image>
+                    <div class="swiperItem"> -->
+                        <!-- <div if="{{bol}}" class="search middle">
+                            <div onclick="query">
+                                <text class="btn">查询社保</text>
+                            </div>
+                            <text>一键查询您的社保账单</text>
+                        </div> -->
+                        <!-- <div else class="detail">
+                            <div class="text">
+                                <text class="name">{{name}}</text>
+                                <text class="status">
+                                    <span>缴纳状态:</span>
+                                    <span class="{{status?'':'noNormal'}}">{{status?'参保正常':'参保异常'}}</span>
+                                </text>
+                                <text class="status">缴纳月份: {{totalMonth}}个月</text>
+                                <text class="status">最后更新时间: {{lastUpdateTime}}</text>
+                            </div>
+                            <input type="button" value="查看详情" class="lookDetail" onclick="lookDetail" />
+                        </div> -->
+                    <!-- </div> -->
+                <swiper class="litBanner" indicator="false" autoplay="true" interval="2000">
+                    <block for="{{prop3}}">
+                        <div class="swiperItem">
+                            <text class="hot">热点</text>
+                            <text class="desc" onclick="a($item.url)">
+                                <span>{{$item.post_title}}</span>
+                            </text>
+                        </div>
+                    </block>
+                </swiper>
+            </list-item>
+            <list-item type="box2" class="recommend">
+                <text class="title">精选推荐</text>
+                <div class="list">
+                    <div class="lit-box" onclick="a(prop1.extend.url)">
+                        <image src="{{prop1.icon}}"></image>
+                        <div class="detail">
+                            <text>{{prop1.name}}</text>
+                            <text class="ds">{{prop1.description}}</text>
+                        </div>
+                    </div>
+                    <div class="lit-box" onclick="a(prop4.extend.url)">
+                        <div style="width:100%;height:100%;">
+                            <image src="{{prop4.icon}}"></image>
+                            <div class="detail">
+                                <text>{{prop4.name}}</text>
+                                <text class="ds">{{prop4.description}}</text>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </list-item>
+            <list-item type="box3" class="bottom">
+                <swiper class="b-banner">
+                    <block for="{{prop2}}">
+                        <div class="swiperItem">
+                            <image src="{{$item.img_url}}" onclick="a($item.web_url)"></image>
+                        </div>
+                    </block>
+                </swiper>
+            </list-item>
+            <list-item type="quick" class="analysis">
+                <text class="title">社保分析</text>
+                <div>
+                    <list style="flex-direction: row;">
+                        <list-item type="litBox" class="li">
+                            <div onclick="b('yiliaobaoxian')">
+                                <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/index/li1.png"></image>
+                            </div>
+                        </list-item>
+                        <list-item type="litBox" class="li">
+                            <div onclick="b('yanglaobaoxian')">
+                                <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/index/li2.png"></image>
+                            </div>
+                        </list-item>
+                        <list-item type="litBox" class="li">
+                            <div onclick="b('shengyubaoxian')">
+                                <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/index/li3.png"></image>
+                            </div>
+                        </list-item>
+                        <list-item type="litBox" class="li">
+                            <div onclick="b('shiyebaoxian')">
+                                <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/index/li4.png"></image>
+                            </div>
+                        </list-item>
+                        <list-item type="litBox" class="li">
+                            <div onclick="b('gongshangbaoxian')">
+                                <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/index/li5.png"></image>
+                            </div>
+                        </list-item>
+                    </list>
+                </div>
+            </list-item>
+            <list-item type="box4" style="height:140px;"></list-item>
+        </list>
+    </div>
+</template>
+
+<style lang="less" src="./index1.less"></style>
+<script>
+    import router from '@system.router'
+    import prompt from '@system.prompt'
+    import fetch from '@system.fetch'
+    import storage from '@system.storage'
+    export default {
+        // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
+        private: {
+            bol: true,
+            lastUpdateTime: '',
+            totalMonth: '',
+            status: true,
+            name: '',
+            taskId: '',
+            header_info: null,
+            url:''
+        },
+        props: [
+            'prop3',//'hot_article',
+            'prop2',//'mid_banner',
+            'prop1',//'activity1',
+            'prop5',//'activity1Url',
+            'prop4',//'activity2',
+            'prop6'//'activity2Url',
+        ],
+        onshow() {
+            this.onInit();
+        },
+        onInit() {
+            this.getHeaderInfo();
+            let that = this;
+            storage.get({
+                key: 'detail',
+                success: function (data) {
+                    if (data != '') {
+                        data = JSON.parse(data);
+                        that.lastUpdateTime = data.lastTime;
+                        that.taskId = data.taskId;
+                        that.status = data.isNormal;
+                        that.name = data.name;
+                        that.totalMonth = data.mMonth;
+                        that.bol = false;
+                    }
+                },
+                fail: function (data, code) {
+                    console.log("handling fail, code = " + code);
+                }
+            })
+        },
+        getHeaderInfo(){
+            const that = this;
+            return new Promise((resolve, reject) => {
+                fetch.fetch({
+                    url: this.$app.$def.baseUrl + '/api/shebao/sys/home_config',
+                    method: 'get',
+                    responseType: 'text',
+                    header: {
+                        "User-Token": '',
+                        "App-Version": '1.1.0', 
+                        "User-Device-Type": 'quickapp', 
+                        "device-type": "quickapp",
+                        "channel": this.$app.$def.brand,
+                        "app-version": this.$app.$def.appVersion,
+                        "appid": this.$app.$def.appId, 
+                    },
+                    success: function(res){
+                        res = JSON.parse(res.data)
+                        if(res.code == 1){
+                            let info = res.data.index_dynamic_config.find(v =>{return v.config_name == "人人社保_首页头部服务（快应用）"})
+                            that.header_info = info&&info.server || [];
+                        }
+                    },
+                    fail: function(data){
+                        console.log('fail')
+                    }
+                })
+            })
+        },
+         toUrl(item){
+            if(item.type == 4){
+                router.push({
+                    uri: 'WebView',
+                    params: {
+                        title: item.config_name,
+                        url: 'http://www.baidu.com'
+                    }
+                })
+            }else{
+                router.push({uri:item.url})
+            }
+            
+        },
+        to(){
+            router.push({
+                uri: 'http://manage.shebao.dai58.cn/portal/shebao/wap_detail//id/3205.html'
+            })
+        },
+        query() {
+            if (this.$app.$def.canSearch) {
+                prompt.showDialog({
+                    title: '提示',
+                    message: '下载APP才能使用查询社保功能哦~',
+                    buttons: [{
+                        text: '取消',
+                        color: '#999999'
+                    },
+                    {
+                        text: '下载APP',
+                        color: '#4077ff'
+                    }],
+                    success: (data) => {
+                        if (data.index == 1) {
+                           $umeng_stat.trackEvent('sychaxunxiazai','首页查询下载APP'); //事件ID
+                            router.push({
+                                uri: this.$app.$def.downUrl
+                            })
+                        }
+                    },
+                    cancel: function () {
+                        console.log('handling cancel')
+                    },
+                    fail: function (data, code) {
+                        console.log(`handling fail, code = ${code}`)
+                    }
+                })
+            } else {
+                storage.get({
+                    key: 'token',
+                    success: function (data) {
+                        if (data != '') {
+                            router.push({
+                                uri: '/Query'
+                            })
+                        } else {
+                            router.push({
+                                uri: '/Login',
+                                params: { key: 'Query' }
+                            })
+                        }
+                    },
+                    fail: function (data, code) {
+
+                    }
+                })
+            }
+        },
+        a(url, etv) {
+            router.push({
+                uri: url
+            })
+        },
+        b(name, etv) {
+            router.push({
+                uri: `/IndexDetail`,
+                params: {
+                    name: name
+                }
+            })
+        },
+        lookDetail() {
+            router.push({
+                uri: `/QueryResult`,
+                params: {
+                    taskId: this.taskId
+                }
+            })
+        },
+        logOut() {
+            this.bol = true;
+            this.lastUpdateTime = '';
+            this.totalMonth = '';
+            this.status = '';
+            this.name = '';
+            this.taskId = '';
+        }
+    }
+</script>

@@ -1,0 +1,276 @@
+<template>
+    <!-- template里只能有一个根节点 -->
+    <div class="demo-page">
+        <div class="topTitle">
+            <stack>
+                <input type="button" value="返回" onclick="backIndex"></input>
+                <text>查社保</text>
+            </stack>
+        </div>
+        <!-- <div class="how" onclick="howSearch">
+            <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/query/horn.png"></image>
+            <text>社保怎么查，如何获取账号密码？</text>
+        </div> -->
+        <div class="form">
+            <div class="item" onclick="setPosition">
+                <image style="height:50px;margin-left:5px;" src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/index/position.png"></image>
+                <div>
+                    <text>{{city}}</text>
+                    <image class="image" src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/personal/arrow.png"></image>
+                </div>
+            </div>
+            <block for="{{option}}">
+                <div class="item">
+                    <image class="image" if="$item.type=='text'" src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/query/id.png"></image>
+                    <image class="image" else src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/login/lock.png"></image>
+                    <input type="{{$item.type}}" placeholder="{{$item.label}}" onchange="getSearch($idx)" />
+                </div>
+            </block>
+        </div>
+        <div class="auth">
+            <image if="!isAgree" src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/query/xieyi1.png" onclick="changeAgree"></image>
+            <image else src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/query/xieyi2.png" onclick="changeAgree"></image>
+            <text>同意</text>
+            <text onclick="serverDetail" style="color:#4077ff">《认证服务协议》</text>
+        </div>
+        <!-- 点击跳转详情页 -->
+        <input class="queryBtn" type="button" value="查询" onclick="saerchResult" />
+        <div class="warn">
+            <text>数据加密，请放心查询</text>
+            <text>人人社保平台将保障您的信息安全</text>
+        </div>
+    </div>
+</template>
+
+<style src="./query.less" lang="less"></style>
+
+<script>
+    import router from '@system.router'
+    import fetch from '@system.fetch'
+    import prompt from '@system.prompt'
+    import storage from '@system.storage'
+
+    export default {
+        // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
+        private: {
+            title: '示例页面',
+            show: true,
+            city: '',
+            href: '',
+            option: [],
+            search: [],
+            token: '',
+            authServer: '',
+            isAgree: true,
+        },
+        onShow() {
+            $umeng_stat.resume(this);
+        },
+        onHide() {
+            $umeng_stat.pause(this);
+        },
+        onInit() {
+            let that = this;
+            this.city = this.$app.$def.city;
+            storage.get({
+                key: 'token',
+                success: function (data) {
+                    that.token = data;
+                },
+                fail: function (data, code) {
+
+                }
+            })
+            storage.get({
+                key: 'agreement',
+                success: (data) => {
+                    this.authServer = data;
+                },
+                fail: function (data, code) {
+                    console.log("handling fail, code = " + code);
+                }
+            })
+            this.getOption();
+            // fetch.fetch({
+            //     url: this.$app.$def.baseUrl + '/api/shebao/task/city_list',
+            //     data: {
+            //         organization: 'shebao'
+            //     },
+            //     success: function (data) {
+            //         let res = JSON.parse(data.data);
+            //         if (!res.data.some((item) => {
+            //             return item.city_id == that.$app.$def.city_id;
+            //         })) {
+            // prompt.showToast({
+            //     message: '当前定位的城市没有提供服务，请见谅。',
+            //     duration: 2000,
+            //     gravity: 'center'
+            // })
+            //             return false;
+            //         } else {
+            // that.getOption()
+            //         }
+            //     },
+            //     fail: function (data, code) {
+
+            //     }
+            // })
+        },
+        changeAgree() {
+            this.isAgree = !this.isAgree;
+        },
+        serverDetail() {
+            router.push({
+                uri: this.authServer
+            })
+        },
+        getOption() {
+            if (this.$app.$def.city_id == '') {
+                prompt.showToast({
+                    message: '请先选择城市!',
+                    duration: 2000,
+                    gravity: 'center'
+                })
+            } else {
+                fetch.fetch({
+                    url: this.$app.$def.baseUrl + '/api/shebao/task/city_auth_config',
+                    header: {
+                        "device_type": "quickapp",
+                        "channel": this.$app.$def.brand,
+                        "app_version": this.$app.$def.appVersion,
+                        "appid": this.$app.$def.appId
+                    },
+                    data: { city_id: this.$app.$def.city_id, debug: '' },
+                    success: (res) => {
+                        res = JSON.parse(res.data);
+                        if (res.data.entrys) {
+                            this.href = res.data.page_config[0].value;
+                            this.option = res.data.entrys.parameters;
+                            this.option.map((item) => {
+                                this.search.push({ name: item.name, value: '' })
+                            })
+                        } else {
+                            prompt.showToast({
+                                message: '当前定位的城市没有提供服务，请见谅。',
+                                duration: 2000,
+                                gravity: 'center'
+                            })
+                        }
+                    },
+                    fail: function (data, code) {
+                    }
+                })
+            }
+        },
+        howSearch() {
+            router.push({
+                uri: this.href
+            })
+        },
+        getSearch(index, value) {
+            this.search[index].value = value.text;
+        },
+        saerchResult() {
+            if (!this.isAgree) {
+                prompt.showToast({
+                    message: '您未同意认证服务协议.',
+                    duration: 2000,
+                    gravity: 'center'
+                })
+            } else {
+                if (this.$app.$def.city_id == "") {
+                    prompt.showToast({
+                        message: '请先选择城市',
+                        duration: 2000,
+                        gravity: 'center'
+                    })
+                } else {
+                    let obj = {}, bol = true;
+                    obj.city_id = this.$app.$def.city_id;
+                    this.search.map((item) => {
+                        if (item.value == '' || item.value == undefined) {
+                            bol = false;
+                        }
+                        if (!obj[item.name]) {
+                            obj[item.name] = item.value;
+                        }
+                    });
+                    if (!bol) {
+                        prompt.showToast({
+                            message: '请填写正确信息.',
+                            duration: 2000,
+                            gravity: 'center'
+                        })
+                    } else {
+                        let that = this;
+                        (function () {
+                            fetch.fetch({
+                                url: that.$app.$def.baseUrl + '/api/shebao/task/auth_login',
+                                header: {
+                                    "User-Token": that.token,
+                                    "User-Device-Type": 'quickapp',
+                                    "App-Version": '1',
+                                    "device_type": "quickapp",
+                                    "channel": that.$app.$def.brand,
+                                    "app_version": that.$app.$def.appVersion,
+                                    "appid": that.$app.$def.appId
+                                },
+                                data: obj,
+                                success: (data) => {
+                                    let res = JSON.parse(data.data);
+                                    if (res.code != 1) {
+                                        prompt.showToast({
+                                            message: res.msg,
+                                            duration: 2000,
+                                            gravity: 'center'
+                                        })
+                                        return false;
+                                    }
+                                    //在别的APP登录了TOKEN失效
+                                    if (res.msg.includes('请重新登陆app')) {
+                                        prompt.showToast({
+                                            message: '登陆过期请重新登陆！',
+                                            duration: 2000,
+                                            gravity: 'center'
+                                        })
+                                        router.replace({
+                                            uri: '/Login',
+                                            params: {
+                                                key: 'Query'
+                                            }
+                                        })
+                                    } else {
+                                        router.push({
+                                            uri: '/Loading',
+                                            params: { taskId: res.data.task_id }
+                                        })
+                                    }
+                                },
+                                fail: function (data, code) {
+                                    prompt.showToast({
+                                        message: '网络故障，请稍后再试',
+                                        duration: 2000,
+                                        gravity: 'center'
+                                    })
+
+                                }
+                            })
+                        })()
+                    }
+                }
+            }
+
+        },
+        setPosition() {
+            router.push({
+                uri: '/SelectPosition',
+                params: { from: 'Query' }
+            })
+        },
+        backIndex() {
+            router.push({
+                uri: '/Index'
+            })
+        }
+    }
+</script>

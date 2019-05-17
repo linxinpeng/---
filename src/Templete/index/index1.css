@@ -1,0 +1,238 @@
+.flist {
+  height: 100%;
+  width: 100%;
+  align-items: flex-start;
+}
+.main {
+  display: flex;
+  height: 100%;
+  width: 90%;
+}
+.main .middle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+.main .header {
+  height: 460px;
+  padding-top: 30px;
+  background-color: #ffffff;
+  border: 1px solid #eeeeee;
+  border-top-width: 0;
+  border-right-width: 0;
+  border-left-width: 0;
+}
+.main .header .position {
+  width: 90%;
+  height: 50px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.main .header .position image {
+  width: 26px;
+  margin-right: 20px;
+}
+.swiperItem {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+.b-inner {
+  width: 100%;
+  height: 220px;
+  display: flex;
+}
+.b-inner .i-item {
+  flex-grow: 1;
+  flex-direction: column;
+  justify-content: center;
+  color: #ffffff;
+  align-items: center;
+}
+.b-inner .i-item image {
+  width: 68px;
+  height: 68px;
+}
+.b-inner .i-item text {
+  color: #ffffff;
+  font-size: 26px;
+  margin-top: 10px;
+}
+.bigBanner {
+  width: 100%;
+  height: 500px;
+  border-radius: 10px;
+}
+.bigBanner .swiperItem {
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+}
+.bigBanner .swiperItem .search {
+  font-size: 28px;
+}
+.bigBanner .swiperItem .search text {
+  color: #ffffff;
+}
+.bigBanner .swiperItem .search .btn {
+  font-size: 32px;
+  color: #4077ee;
+  width: 400px;
+  height: 88px;
+  line-height: 88px;
+  text-align: center;
+  border-radius: 44px;
+  background-color: #ffffff;
+  margin-bottom: 32px;
+}
+.bigBanner .swiperItem .detail {
+  width: 90%;
+  font-size: 28px;
+  justify-content: space-between;
+  align-items: center;
+}
+.bigBanner .swiperItem .detail text {
+  color: #ffffff;
+}
+.bigBanner .swiperItem .detail .text {
+  flex-direction: column;
+  width: 100%;
+  align-items: flex-start;
+}
+.bigBanner .swiperItem .detail .text .name {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+.bigBanner .swiperItem .detail .text .status {
+  margin: 5px 0 ;
+}
+.bigBanner .swiperItem .detail .noNormal {
+  color: red;
+}
+.bigBanner .swiperItem .detail .lookDetail {
+  align-self: flex-end;
+  background-color: transparent;
+  border-color: #fff;
+  border: 1px solid #fff;
+  border-radius: 29px;
+  color: #fff;
+  width: 180px;
+  height: 58px;
+  font-size: 28px;
+}
+.litBanner {
+  width: 100%;
+  height: 100px;
+  font-size: 28px;
+}
+.litBanner text {
+  color: #333333;
+  lines: 1;
+}
+.litBanner .hot {
+  color: #FF0000;
+  border-radius: 15px;
+  border: 1px solid #FF0000;
+  padding: 5px 10px;
+  margin-right: 20px;
+}
+.litBanner .desc {
+  lines: 1;
+  text-overflow: ellipsis;
+}
+.recommend {
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+}
+.recommend .title {
+  width: 100%;
+  margin: 30px 0;
+  font-size: 40px;
+  color: #333333;
+}
+.recommend .list {
+  width: 100%;
+  height: 200px;
+}
+.recommend .lit-box {
+  margin-left: 20px;
+  padding: 50px 15px;
+  border: 3px solid #eeeeee;
+  width: 48%;
+  margin-right: 12px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.recommend .lit-box image {
+  width: 30%;
+}
+.recommend .lit-box .detail {
+  display: flex;
+  flex-direction: column;
+  width: 70%;
+  padding: 0 10px 0 24px;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+}
+.recommend .lit-box .detail text {
+  width: 100%;
+  text-align: left;
+  color: #333333;
+  lines: 1;
+  text-overflow: ellipsis;
+  font-size: 32px;
+}
+.recommend .lit-box .detail .ds {
+  color: #999999;
+  font-size: 24px;
+  lines: 1;
+  text-overflow: ellipsis;
+}
+.bottom {
+  margin-top: 50px;
+  width: 90%;
+  height: 180px;
+}
+.bottom .b-banner {
+  width: 100%;
+  indicator-size: 5px;
+}
+.bottom .b-banner .swiperItem {
+  justify-content: center;
+}
+.bottom .b-banner .swiperItem image {
+  width: 100%;
+}
+.bottom .b-banner .swiperItem a {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+.analysis {
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  height: 350px;
+}
+.analysis .title {
+  width: 100%;
+  margin: 30px 0;
+  font-size: 40px;
+  color: #333333;
+}
+.analysis .li > div {
+  height: 210px;
+  width: 190px;
+  border-radius: 10px;
+  background-color: #ebf1ff;
+  margin-right: 25px;
+  background-size: contain;
+}

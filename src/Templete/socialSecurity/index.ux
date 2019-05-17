@@ -1,0 +1,186 @@
+<template>
+    <!-- template里只能有一个根节点 -->
+    <div class="main">
+        <list>
+            <!-- <list-item type="box" if="{{searched}}">
+                <stack class="header middle" onclick="addCard">
+                    <image class="topBgImg" src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/security/headerBG.png"></image>
+                    <div class="content">
+                        <text class="title">
+                            -添加社保卡-
+                        </text>
+                        <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/security/bakCard.png"></image>
+                        <text class="detail">
+                            绑定社保账户，获取更多社保信息
+                        </text>
+                    </div>
+                </stack>
+            </list-item>
+            <list-item type="box3" else>
+                <stack class="header middle header1" onclick="QueryResult">
+                    <image class="topBgImg" src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/security/headerBG.png"></image>
+                    <div class="content">
+                        <stack>
+                            <text class="title">
+                                -我的社保卡-
+                            </text>
+                            <div class="box">
+                                <text show="{{isNormal}}" class="status">参保正常</text>
+                                <text show="{{!isNormal}}" class="status noNormal">参保异常</text>
+                            </div>
+                        </stack>
+                        <text>查看详情></text>
+                        <div class="twoBox">
+                            <div class="item">
+                                <text class="num">
+                                    <span>{{mMonth}}</span>
+                                    <span class="word">个月</span>
+                                </text>
+                                <text>医保累计缴纳</text>
+                            </div>
+                            <div class="item">
+                                <text class="num">
+                                    <span>{{oMonth}}</span>
+                                    <span class="word">个月</span>
+                                </text>
+                                <text>养老保累计缴纳</text>
+                            </div>
+                        </div>
+                    </div>
+                </stack>
+            </list-item> -->
+            <list-item type="box1">
+                <div class="list">
+                    <text class="title">社保分析</text>
+                    <div class="box" onclick="detail('yiliaobaoxian')">
+                        <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/security/yiliao.png"></image>
+                    </div>
+                    <div class="box" onclick="detail('yanglaobaoxian')">
+                        <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/security/yanglao.png"></image>
+                    </div>
+                    <div class="box" onclick="detail('shengyubaoxian')">
+                        <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/security/shengyu.png"></image>
+                    </div>
+                    <div class="box" onclick="detail('shiyebaoxian')">
+                        <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/security/shiye.png"></image>
+                    </div>
+                    <div class="box" onclick="detail('gongshangbaoxian')">
+                        <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/security/gongshang.png"></image>
+                    </div>
+                </div>
+            </list-item>
+            <list-item type="box2" style="height:140px;"></list-item>
+        </list>
+    </div>
+</template>
+
+<style src="./security.less" lang="less"></style>
+
+<script>
+    import router from '@system.router';
+    import prompt from '@system.prompt';
+    import storage from '@system.storage';
+    export default {
+        // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
+        private: {
+            title: '示例页面',
+            searched: true,
+            mMonth: '',
+            oMonth: '',
+            taskId: '',
+            isNormal: true
+        },
+        detail(c, etv) {
+            router.push({
+                uri: `/IndexDetail`,
+                params: {
+                    name: c
+                }
+            })
+        },
+        addCard() {
+            if (this.$app.$def.canSearch) {
+                prompt.showDialog({
+                    title: '提示',
+                    message: '下载APP才能使用查询社保功能哦~',
+                    buttons: [{
+                        text: '取消',
+                        color: '#999999'
+                    },
+                    {
+                        text: '下载APP',
+                        color: '#4077ff'
+                    }],
+                    success: (data) => {
+                        if (data.index == 1) {
+                            $umeng_stat.trackEvent('sbchaxunxiazai', '社保页查询下载APP'); //事件ID
+                            router.push({
+                                uri: this.$app.$def.downUrl
+                            })
+                        }
+                    },
+                    cancel: function () {
+                        console.log('handling cancel')
+                    },
+                    fail: function (data, code) {
+                        console.log(`handling fail, code = ${code}`)
+                    }
+                })
+            } else {
+                storage.get({
+                    key: 'token',
+                    success: function (data) {
+                        if (data != '') {
+                            router.push({
+                                uri: '/Query'
+                            })
+                        } else {
+                            router.push({
+                                uri: '/Login',
+                                params: { key: 'Query' }
+                            })
+                        }
+                    },
+                    fail: function (data, code) {
+
+                    }
+                })
+            }
+        },
+        QueryResult() {
+            router.push({
+                uri: '/QueryResult',
+                params: {
+                    taskId: this.taskId
+                }
+            })
+        },
+        onInit() {
+            let that = this;
+            storage.get({
+                key: 'detail',
+                success: function (data) {
+                    if (data != '') {
+                        data = JSON.parse(data);
+                        that.searched = false;
+                        that.mMonth = data.mMonth;
+                        that.oMonth = data.oMonth;
+                        that.taskId = data.taskId;
+                        that.isNormal = data.isNormal;
+                    } else {
+                        that.searched = true;
+                    }
+                },
+                fail: function (data, code) {
+                    console.log("handling fail, code = " + code);
+                }
+            })
+        },
+        logOut() {
+            this.searched = true;
+            this.mMonth = '';
+            this.oMonth = '';
+            this.taskId = '';
+        }
+    }
+</script>

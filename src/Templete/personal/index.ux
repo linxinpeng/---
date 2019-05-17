@@ -1,0 +1,219 @@
+<template>
+    <div class="main">
+        <div class="header" style="justify-content: space-between;">
+            <text>{{isLogin?phone:'未登录'}}</text>
+            <div>
+                <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/personal/touxiang1.png" show="{{!isLogin}}"></image>
+                <image src="{{personIcon}}" show="{{isLogin}}"></image>
+            </div>
+        </div>
+        <list class="listContent">
+            <list-item type="box">
+                <div if="{{isLogin}}" class="li" onclick="loginOut">
+                    <image class="icon" src="http://test.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/personal/out.png"></image>
+                    <div class="content fun">
+                        <text>账号注销</text>
+                        <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/personal/arrow.png"></image>
+                    </div>
+                </div>
+                <div class="li" onclick="aboutUs">
+                    <image class="icon" src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/personal/about.png"></image>
+                    <div class="content fun">
+                        <text>关于我们</text>
+                        <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/personal/arrow.png"></image>
+                    </div>
+                </div>
+                <div class="li" onclick="advice">
+                    <image class="icon" src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/personal/advice.png"></image>
+                    <div class="content">
+                        <text>意见反馈</text>
+                        <image src="http://cdn.shebao.dai58.cn/themes/simpleboot3/public/quickapp/renrenshebao/personal/arrow.png"></image>
+                    </div>
+                </div>
+            </list-item>
+            <list-item type="box2">
+                <div class="li">
+                    <text style="height:120px;width:100%;text-align:center;font-size:32px;color:#4077FF;" onclick="confirmLogout" show="{{isLogin}}">退出登录</text>
+                    <text style="height:120px;width:100%;text-align:center;font-size:32px;color:#4077FF;" onclick="login" show="{{!isLogin}}">登录</text>
+                </div>
+            </list-item>
+        </list>
+        <div class="mask" if="{{isShow}}" onclick="closeMaks">
+            <div class="msgBox">
+                <div style="width: 100%;">
+                    <text class="title">提示</text>
+                </div> 
+                <div style="width: 100%;">
+                    <text class="content" style="width:100%;text-align:center;">是否确认退出登录</text>
+                </div> 
+                <div style="width: 100%;margin-top:30px;justify-content:flex-end;">
+                    <text class="btn" onclick="logout">确定</text>
+                    <text class="btn" onclick="closeMaks">取消</text>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<style src="./personal.less" lang="less"></style>
+
+<script>
+    import prompt from '@system.prompt'
+    import router from '@system.router'
+    import storage from '@system.storage'
+    export default {
+        // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
+        private: {
+            isLogin: false,
+            title: '示例页面',
+            personIcon: '',
+            phone: '',
+            href: '',
+            token: '',
+            isShow:false
+        },
+        props: [
+            'prop7',
+            'prop8',
+            'prop9'
+        ],
+        confirmLogout(){
+             this.isShow=true;
+        },
+        closeMaks(){
+            this.isShow=false;
+        },
+        logout() {
+            storage.set({
+                key: 'token',
+                value: '',
+                success: (data) => {
+                    this.isLogin = false;
+                    this.isShow = false;
+                    prompt.showToast({
+                        message: '退出成功'
+                    })
+                },
+                fail: function (data, code) {
+                    console.log(`handling fail, code = ${code}`)
+                }
+            })
+            storage.set({
+                key: 'phone',
+                value: '',
+                success: (data) => {
+
+                },
+                fail: function (data, code) {
+                    console.log(`handling fail, code = ${code}`)
+                }
+            })
+            storage.set({
+                key: 'detail',
+                value: '',
+                success: (data) => {
+                    if (this.nextVm) {
+                        // Way1. 调用方法
+                        this.nextVm.logOut()
+                        // Way2. 触发事件
+                        //this.nextVm.$emit('customEventInVm2', '兄弟之间通信的消息内容')
+                    }
+                    if (this.previousVm) {
+                        this.previousVm.logOut()
+                    }
+                },
+                fail: function (data, code) {
+                    console.log(`handling fail, code = ${code}`)
+                }
+            })
+            storage.set({
+                key: 'personIcon',
+                value: '',
+                success: (data) => {
+
+                },
+                fail: function (data, code) {
+                    console.log(`handling fail, code = ${code}`)
+                }
+            })
+            this.token = "";
+        },
+        onInit() {
+            storage.get({
+                key: 'token',
+                success: (data) => {
+                    if (data != '') {
+                        this.isLogin = true;
+                        this.token = data;
+                    }
+                },
+                fail: function (data, code) {
+                    console.log("handling fail, code");
+                }
+            })
+            storage.get({
+                key: 'phone',
+                success: (data) => {
+                    if (data != '') {
+                        this.phone = data;
+                    }
+                },
+                fail: function (data, code) {
+                    console.log("handling fail, code = " + code);
+                }
+            })
+            storage.get({
+                key: 'personIcon',
+                success: (data) => {
+                    if (data != '') {
+                        this.personIcon = data;
+                    }
+                },
+                fail: function (data, code) {
+                    console.log("handling fail, code = " + code);
+                }
+            })
+            storage.get({
+                key: 'wap_about',
+                success: (data) => {
+                    this.href = data;
+                },
+                fail: function (data, code) {
+                    console.log("handling fail, code = " + code);
+                }
+            })
+        },
+        login() {
+            router.push({
+                uri: '/Login'
+            })
+        },
+        loginOut(){
+            router.push({
+                uri:'/CancleAccount'
+            })
+        },
+        aboutUs() {
+            router.push({
+                uri: this.href
+            })
+        },
+        advice() {
+            if (this.isLogin) {
+                router.push({
+                    uri: '/Advice',
+                    params: {
+                        token: this.token
+                    }
+                })
+            }else{
+               router.push({
+                    uri: '/Login',
+                    params:{
+                        key:'Advice'
+                    }
+                }) 
+            }
+        }
+    }
+</script>

@@ -1,0 +1,152 @@
+{
+  "package": "com.renrenshebaonew.quickapp",
+  "name": "人人社保",
+  "versionName": "1.1.0",
+  "versionCode": 29,
+  "minPlatformVersion": 1030,
+  "icon": "/Common/cutLogo.png",
+  "features": [
+    {
+      "name": "system.prompt"
+    },
+    {
+      "name": "system.router"
+    },
+    {
+      "name": "system.shortcut"
+    },
+    {
+      "name": "system.storage"
+    },
+    {
+      "name": "system.fetch"
+    },
+    {
+      "name": "system.network"
+    },
+    {
+      "name": "system.device"
+    },
+    {
+      "name": "system.webview"
+    },
+    {
+      "name": "system.geolocation"
+    }
+  ],
+  "permissions": [
+    {
+      "origin": "*"
+    }
+  ],
+  "config": {
+    "logLevel": "debug",
+    "data": {
+      "umeng_appkey": "5bfce778f1f55612fb00020a"
+    }
+  },
+  "router": {
+    "entry": "Index",
+    "pages": {
+      "Advice": {
+        "component": "index"
+      },
+      "JiaocunDetail": {
+        "component": "index"
+      },
+      "Index": {
+        "component": "index"
+      },
+      "About": {
+        "component": "index"
+      },
+      "Query": {
+        "component": "index"
+      },
+      "Login": {
+        "component": "index"
+      },
+      "QueryResult": {
+        "component": "index"
+      },
+      "SelectPosition": {
+        "component": "index"
+      },
+      "IndexDetail": {
+        "component": "index"
+      },
+      "Loading": {
+        "component": "index"
+      },
+      "searchErr": {
+        "component": "index"
+      },
+      "WebView": {
+        "component": "index"
+      },
+      "CancleAccount": {
+        "component": "index"
+      }
+    }
+  },
+  "display": {
+    "titleBarBackgroundColor": "#f2f2f2",
+    "titleBarTextColor": "#414141",
+    "titleBar": false,
+    "fullScreen": false,
+    "menu": true,
+    "pages": {
+      "Advice": {
+        "titleBarText": "意见反馈",
+        "menu": false,
+        "titleBar": false
+      },
+      "JiaocunDetail": {
+        "titleBarText": "",
+        "menu": false
+      },
+      "Index": {
+        "titleBarText": "人人社保",
+        "menu": false,
+        "titleBar": false
+      },
+      "Query": {
+        "titleBarText": "查社保",
+        "menu": false,
+        "titleBar": false
+      },
+      "Login": {
+        "titleBarText": "登录",
+        "menu": false
+      },
+      "Loading": {
+        "titleBarText": "加载中",
+        "menu": false
+      },
+      "QueryResult": {
+        "titleBarText": "查询结果",
+        "titleBar": false,
+        "menu": false
+      },
+      "SelectPosition": {
+        "titleBarText": "选择城市",
+        "menu": false
+      },
+      "About": {
+        "menu": false
+      },
+      "IndexDetail": {
+        "menu": false
+      },
+      "searchErr": {
+        "menu": false
+      },
+      "CancleAccount": {
+        "menu": false,
+        "titleBarText": "账号注销",
+        "titleBarBackgroundColor": "#f2f2f2",
+        "titleBar": true
+      }
+    }
+  }
+}

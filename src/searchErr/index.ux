@@ -1,0 +1,27 @@
+<template>
+    <!-- template里只能有一个根节点 -->
+    <div class="demo-page">
+       
+    </div>
+</template>
+
+<style src="./searchErr.less" lang="less"></style>
+
+<script>
+    import router from '@system.router'
+    import fetch from '@system.fetch'
+    import prompt from '@system.prompt'
+    import storage from '@system.storage'
+    export default {
+        // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
+        private: {
+           
+        },
+        protected: {
+            key: ''
+        },
+        onInit() {
+         
+        }
+    }
+</script>

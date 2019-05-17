@@ -1,0 +1,261 @@
+<template>
+    <!-- template里只能有一个根节点 -->
+    <div class="demo-page">
+        <!-- <div if="{{!isSearch}}" class="letterList" id="letterList">
+            <block for="{{letter}}">
+                <stack>
+                    <text class="Litem">
+                        {{$item.name}}
+                    </text>
+                    <div class="hideMsg" ontouchstart="moveLetter" ontouchmove="moveList">
+                        <text>{{$idx}}</text>
+                    </div>
+                </stack>
+            </block>
+        </div> -->
+        <div class="topTitle">
+            <stack>
+                <input type="button" value="返回" onclick="backIndex"></input>
+                <text>城市选择</text>
+            </stack>
+        </div>
+        <div class="search">
+            <input placeholder="输入您所在的城市" onchange="search" />
+        </div>
+        <div if="{{!isSearch}}" class="located">
+            <text class="title">当前城市</text>
+            <text class="city"  onclick="backIndex">{{currentCity}}</text>
+        </div>
+        <div if="{{!isSearch}}" class="hotCity">
+            <text class="title">热门城市</text>
+            <div class="city">
+                <block for="{{hotCity}}">
+                    <text onclick="{{select($item.code+$item.name)}}">{{$item.name}}</text>
+                </block>
+            </div>
+        </div>
+        <div class="map" if="{{!isSearch}}" for="{{letter}}">
+            <div class="mapItem">
+                <block>
+                    <text class="title" if="{{$item.name=='I'}}" onappear="loadMore">
+                        {{$item.name}}
+                    </text>
+                    <text else class="title">
+                        {{$item.name}}
+                    </text>
+                </block>
+                <div for="item in $item.arr">
+                    <text class="cityName" onclick="{{select(item.code+item.name)}}">{{item.name}}</text>
+                </div>
+            </div>
+        </div>
+        <div if="{{isSearch}}" class="searchBox">
+            <div class="titleBox">
+                <text class="title">搜索结果</text>
+            </div>
+            <div class="mapItem">
+                <div if="hasResult">
+                    <block for="searchArr">
+                        <stack>
+                            <text class="cityName" onclick="{{select($item.code+$item.name)}}">{{$item.name}}</text>
+                        </stack>
+                    </block>
+                </div>
+                <div else>
+                    <text>无结果</text>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<style src="./selectPosition.less" lang="less"></style>
+
+<script>
+    import router from '@system.router'
+    import prompt from '@system.prompt'
+    import cityData1 from './data1.js'
+    import cityData2 from './data2.js'
+
+    export default {
+        private: {
+            isSearch: false,
+            currentCity: '',
+            searchArr: [],
+            title: '示例页面',
+            hotCity: [
+                {
+                    "name": "北京",
+                    "key": "热",
+                    "first": "bj",
+                    "full": "beijing",
+                    "code": "1101"
+                },
+                {
+                    "name": "深圳",
+                    "key": "热",
+                    "first": "sz",
+                    "full": "shenzhen",
+                    "code": "4403"
+                },
+                {
+                    "name": "天津",
+                    "key": "热",
+                    "first": "tj",
+                    "full": "tianjin",
+                    "code": "1201"
+                },
+                {
+                    "name": "上海",
+                    "key": "热",
+                    "first": "sh",
+                    "full": "shanghai",
+                    "code": "3101"
+                },
+                {
+                    "name": "重庆",
+                    "key": "热",
+                    "first": "cq",
+                    "full": "chongqing",
+                    "code": "5001"
+                },
+                {
+                    "name": "苏州",
+                    "key": "热",
+                    "first": "sz",
+                    "full": "suzhou",
+                    "code": "3205"
+                },
+                {
+                    "name": "广州",
+                    "key": "热",
+                    "first": "gz",
+                    "full": "guangzhou",
+                    "code": "4401"
+                },
+                {
+                    "name": "南京",
+                    "key": "热",
+                    "first": "nj",
+                    "full": "nanjing",
+                    "code": "3201"
+                },
+                {
+                    "name": "厦门",
+                    "key": "热",
+                    "first": "xm",
+                    "full": "xiamen",
+                    "code": "3502"
+                },
+            ],
+            letter: [
+                { name: 'A', arr: [] },
+                { name: 'B', arr: [] },
+                { name: 'C', arr: [] },
+                { name: 'D', arr: [] },
+                { name: 'E', arr: [] },
+                { name: 'F', arr: [] },
+                { name: 'G', arr: [] },
+                { name: 'H', arr: [] },
+                { name: 'I', arr: [] },
+                { name: 'J', arr: [] },
+                { name: 'K', arr: [] },
+                { name: 'L', arr: [] },
+                { name: 'M', arr: [] },
+                { name: 'N', arr: [] },
+                { name: 'O', arr: [] },
+                { name: 'P', arr: [] },
+                { name: 'Q', arr: [] },
+                { name: 'R', arr: [] },
+                { name: 'S', arr: [] },
+                { name: 'T', arr: [] },
+                { name: 'U', arr: [] },
+                { name: 'V', arr: [] },
+                { name: 'W', arr: [] },
+                { name: 'X', arr: [] },
+                { name: 'Y', arr: [] },
+                { name: 'Z', arr: [] },
+            ],
+            isFirst: true,
+            hasResult: true,
+        },
+        protected: {
+            from: ''
+        },
+        onShow() {
+            $umeng_stat.resume(this);
+        },
+        onHide() {
+            $umeng_stat.pause(this);
+        },
+        onInit: function () {
+            this.currentCity = this.$app.$def.city;
+            for (let item of cityData1) {
+                let idx = item.key.charCodeAt(0) - 65;
+                this.letter[idx].arr.push(item);
+            }
+        },
+        noteStart(ev) {
+            this.start = ev.touches[0].clientY;
+        },
+        loadMore() {
+            if (this.isFirst) {
+                for (let item of cityData2) {
+                    let idx = item.key.charCodeAt(0) - 65;
+                    this.letter[idx].arr.push(item);
+                }
+                this.isFirst = false;
+            }
+        },
+        select(dd) {
+            this.$app.$def.city_id = dd.substring(0,4) + '00';
+            this.$app.$def.city = dd.substring(4);
+            this.$app.$def.autoPosition = false;
+            // console.log(dd.substring(0,4))
+            // console.log(dd.substring(4))
+            //跳转到from
+            router.push({
+                uri: this.from,
+            })
+        },
+        // moveLetter(ev) {
+        //     this.$element('list').scrollTo({ index: ev.currentTarget.attr.value + 1, smooth: true });
+        // },
+        // moveList(ev) {
+        //     let dis = ev.touches[0].clientY;
+        //     let index = Math.ceil((dis - 100) / 30);
+        //     this.$element('list').scrollTo({ index: index });
+        // },
+        showSearch(val) {
+            this.isSearch = true;
+            this.searchArr = [];
+        },
+        search(val) {
+            if (val.text == '') {
+                this.isSearch = false;
+            } else {
+                this.isSearch = true;
+            }
+            this.searchArr = [];
+            let allCity = cityData1.concat(cityData2);
+            for (let item of allCity) {
+                if (item.name.startsWith(val.text)) {
+                    this.searchArr.push(item)
+                    continue;
+                }
+                if (item.full.startsWith(val.text) && item.full.includes(val.text)) {
+                    this.searchArr.push(item)
+                    continue;
+                }
+                if (item.first.startsWith(val.text) && item.first.includes(val.text)) {
+                    this.searchArr.push(item)
+                    continue;
+                }
+            }
+            this.hasResult = this.searchArr.length == 0 ? false : true;
+        },
+        backIndex() {
+            router.back();
+        }
+    }
+</script>

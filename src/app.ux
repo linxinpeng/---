@@ -1,0 +1,31 @@
+<script>
+  /**
+   * 应用级别的配置，供所有页面公用
+   */
+  import util from './util'
+  import './umenganalysis.es.min'
+  import device from '@system.device'
+  export default {
+    onCreate() {
+      $umeng_stat.init(this);   //在onCreate函数中加入该行代码，必须添加！！！
+      device.getInfo({
+        success: (ret) => {
+            console.log(this.brand=ret.brand);
+        }
+      })
+    },
+    showMenu: util.showMenu,
+    createShortcut: util.createShortcut,
+    baseUrl: 'http://shebao.dai58.cn',
+    // baseUrl: 'http://test.shebao.dai58.cn',
+    autoPosition: true,
+    isSearch: false,
+    city_id: '',
+    city: '',
+    brand: '',
+    appVersion: '1.1.0',
+    appId: '4',
+    downUrl:'',
+    canSearch:true
+  }
+</script>
